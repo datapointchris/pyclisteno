@@ -1,6 +1,6 @@
 [project]
 name = "pyclisteno"
-version = "0.1.0"
+version = "0.2.0"
 description = "Learned shortcut, hint, and completion layer for Python CLIs"
 authors = [{ name = "Chris Birch", email = "datapointchris@gmail.com" }]
 license = { text = "MIT" }

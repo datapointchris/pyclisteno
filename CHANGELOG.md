@@ -1,6 +1,43 @@
 # CHANGELOG
 
 
+## v0.2.0 (2026-08-05)
+
+### Continuous Integration
+
+- Drop the PyPI publish job until the channel is decided
+  ([`45e1c8f`](https://github.com/datapointchris/pyclisteno/commit/45e1c8f8b23e7b15b5d7b02ee42753725b626c89))
+
+The publish job fired on the first push and failed: Trusted Publishing is not configured on PyPI, so
+  uv publish got a valid OIDC token with no matching publisher. The version job succeeded, so v0.1.0
+  is tagged and released on GitHub.
+
+Removing the job rather than leaving it red. Consumers can take a git dependency against the tag in
+  the meantime, and the comment in its place records the two non-obvious things about its shape so
+  restoring it is a copy from pyselfupdate plus configuring the publisher.
+
+### Features
+
+- Resolve the four XDG paths the library reads and writes
+  ([`133d715`](https://github.com/datapointchris/pyclisteno/commit/133d7156ddf42a43abd2ac0cf4317606400aee03))
+
+Pins, the assignment ledger, the walked model, and the shell index. The nesting is deliberately not
+  uniform: pins are namespaced by tool so they sit beside that tool's own config, while state and
+  cache are namespaced by library.
+
+The inversion is load-bearing. ~/.local/state/<tool>/ already holds pyselfupdate's autoupdate.json,
+  which records the version installed on this machine and must never replicate; the ledger must
+  replicate, or the same typed sequence resolves differently per box. One shared directory keeps
+  both true and means adopting the library costs no new synced folder.
+
+Tests pin the parts most likely to be tidied back into symmetry later, and assert the pins filename
+  carries no language prefix, since goclisteno and bashclisteno have to produce the identical name
+  for the shell to read any of them.
+
+Restores the PyPI publish job now that a pending publisher is registered, with the environment-claim
+  requirement written into the comment.
+
+
 ## v0.1.0 (2026-08-05)
 
 ### Chores
