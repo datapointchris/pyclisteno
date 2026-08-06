@@ -1,6 +1,37 @@
 # CHANGELOG
 
 
+## v0.2.1 (2026-08-06)
+
+### Bug Fixes
+
+- Ship py.typed so consumers see the annotations
+  ([`35572f7`](https://github.com/datapointchris/pyclisteno/commit/35572f788174230e44d41aa0dcacab78c50d3918))
+
+The pyproject has carried the Typing :: Typed classifier since the repo was created, but PEP 561
+  requires the marker file for a consumer's type checker to read an installed package's annotations
+  at all. Without it the classifier is a claim nothing honours: every annotation in the package was
+  invisible downstream, and a caller passing the wrong type got no error.
+
+Found while extracting pytermstyle, which used this repo as its template. pyselfupdate already ships
+  the marker.
+
+### Build System
+
+- Declare pytest-cov and ignore coverage artifacts
+  ([`b45288d`](https://github.com/datapointchris/pyclisteno/commit/b45288dde2069d83438ea8ef986ab989a8e9c0bd))
+
+The Taskfile has had a test:coverage target passing --cov since it was written, while pytest-cov
+  appeared in neither pyproject.toml nor uv.lock, so the target could not run. Declaring it makes
+  the task work rather than removing a target that should exist.
+
+.gitignore gains the entries from forge's new sync-gitignore die: .coverage, coverage.xml, dist/ and
+  *.egg-info/. It previously tracked nothing but .planning while the Taskfile's clean target removed
+  four artifacts, so a coverage run here would have offered .coverage up for commit. .venv, htmlcov,
+  .pytest_cache and .ruff_cache are absent on purpose — each tool writes a self-ignoring .gitignore
+  into the directory it creates.
+
+
 ## v0.2.0 (2026-08-05)
 
 ### Continuous Integration
