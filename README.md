@@ -31,9 +31,26 @@ app = typer.Typer()
 attach(app)
 ```
 
-Removing the library is deleting those two lines. Commands are never modified, and the CLI's
-behaviour with `attach()` is byte-identical without it — stdout, stderr, and exit codes — which is
-asserted by the test suite rather than assumed.
+Removing the library is deleting those two lines. Nothing about the CLI changes: with `attach()`
+as written above, stdout, stderr and exit codes are byte-identical without it, at every level of
+the tree and for every `--help`, which the test suite asserts rather than assumes.
+
+Teaching is the one surface that changes what a CLI prints, so it is asked for explicitly:
+
+```python
+attach(app, teaching=True)
+```
+
+Each row in a parent's help then carries the short form of the command it names.
+
+```text
+run      (ru) Run the thing, and keep running it until something says otherwise.
+runs     (runs) List previous runs.
+destroy  Delete everything, permanently and without confirmation.
+```
+
+`runs` shows its whole name because `run` is a strict prefix of it, and `destroy` shows no short
+form at all — see `@no_shortcut` below.
 
 Decorators exist only for exceptions:
 
@@ -68,7 +85,18 @@ else, which is the worst failure available here.
 | `$XDG_CACHE_HOME/clisteno/<tool>.tsv` | Flat index for the shell | Cache |
 
 The config file sits beside the tool's own config and is never merged into it, so the tool never
-parses shortcuts and never needs to know this library exists.
+parses shortcuts and never needs to know this library exists. Its keys are node paths and its
+values are that node's prefix at its own level, which is also how the ledger is keyed:
+
+```toml
+[shortcuts]
+run = "ru"
+"glue nightly" = "ni"
+```
+
+A pin that is unusable — not a prefix of the command's own name, or already spoken for — is
+dropped and the prefix computed as if it were absent. Nothing in that file can stop the CLI
+starting, including a syntax error in it.
 
 ## Related
 
