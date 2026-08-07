@@ -124,19 +124,38 @@ def render_model(model: Model) -> str:
     return json.dumps(model.to_dict(), indent=2) + '\n'
 
 
-def render_index(model: Model) -> str:
-    """One line per assigned shortcut: prefix, the command to type, the summary.
+def index_rows(model: Model) -> list[tuple[str, str, str]]:
+    """The typed sequence, the command it stands for, and the summary.
+
+    Column one is the whole sequence — every ancestor's prefix, then the node's —
+    and not the node's own prefix alone. A prefix is only unique among siblings,
+    so `r` names five different commands in a tool of any size; the sequence is
+    what a user types and therefore the only thing the shell can look up. Getting
+    this wrong produced an index with eleven colliding keys.
 
     Column two omits the argument metavars that `use` carries, because the shell
     inserts this text into the buffer and a literal `<alias>` is not typeable.
     Column three loses its rich tags for the same reason — see markup.py.
+
+    A node under an unassigned parent is unreachable however short its own prefix
+    is, so the walk stops rather than emitting a sequence nothing can type.
     """
-    lines = []
-    for node in model.nodes():
-        if node.prefix is None:
-            continue
-        lines.append(f'{node.prefix}\t{" ".join([model.tool, *node.path])}\t{strip_markup(node.summary)}')
-    return ''.join(f'{line}\n' for line in lines)
+    rows = []
+
+    def descend(node: Node, sequence: list[str]) -> None:
+        for child in node.children:
+            if child.prefix is None:
+                continue
+            typed = [*sequence, child.prefix]
+            rows.append((' '.join(typed), ' '.join([model.tool, *child.path]), strip_markup(child.summary)))
+            descend(child, typed)
+
+    descend(model.root, [])
+    return rows
+
+
+def render_index(model: Model) -> str:
+    return ''.join(f'{typed}\t{command}\t{summary}\n' for typed, command, summary in index_rows(model))
 
 
 def write_atomically(path: Path, text: str) -> None:

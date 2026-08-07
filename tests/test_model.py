@@ -5,8 +5,10 @@ import pytest
 from pyclisteno.assign import assign
 from pyclisteno.fixture import build_fixture_app
 from pyclisteno.ledger import Ledger
+from pyclisteno.markup import strip_markup
 from pyclisteno.model import Model
 from pyclisteno.model import export
+from pyclisteno.model import index_rows
 from pyclisteno.model import load_model
 from pyclisteno.model import render_index
 from pyclisteno.model import render_model
@@ -41,10 +43,27 @@ def test_the_index_holds_only_what_assignment_has_reached(model):
     assert render_index(model) == ''
 
 
-def test_the_index_is_prefix_then_typeable_command_then_summary(model):
-    find_run = next(node for node in model.nodes() if node.path == ['glue', 'nightly', 'run'])
-    find_run.prefix = 'gnr'
-    assert render_index(model) == 'gnr\thostile glue nightly run\tStart the job and wait for it.\n'
+def test_the_index_is_the_typed_sequence_then_the_command_then_the_summary(model):
+    """Column one is what the user types, which is every ancestor's prefix and then this node's."""
+    for path, prefix in ((['glue'], 'g'), (['glue', 'nightly'], 'n'), (['glue', 'nightly', 'run'], 'ru')):
+        next(node for node in model.nodes() if node.path == path).prefix = prefix
+
+    assert render_index(model).splitlines()[-1] == 'g n ru\thostile glue nightly run\tStart the job and wait for it.'
+
+
+def test_every_typed_sequence_in_the_index_is_unique(model):
+    """A prefix is only unique among siblings — `r` names five commands in a tool of any size."""
+    assign(model, Ledger(tool='hostile'), {})
+    sequences = [row[0] for row in index_rows(model)]
+    assert len(sequences) == len(set(sequences))
+
+
+def test_a_command_under_an_unassigned_parent_is_left_out(model):
+    """However short its own prefix, nothing can type its way there."""
+    assign(model, Ledger(tool='hostile'), {})
+    next(node for node in model.nodes() if node.path == ['glue']).prefix = None
+
+    assert [row[1] for row in index_rows(model) if 'glue' in row[1]] == []
 
 
 def test_the_index_omits_metavars_the_shell_cannot_type(model):
@@ -92,9 +111,9 @@ def test_the_index_agrees_with_the_model_it_was_written_from(tmp_path, model, mo
     by_command = {' '.join([reloaded.tool, *node.path]): node for node in reloaded.nodes() if node.prefix}
 
     assert len(rows) == len(by_command)
-    for prefix, command, summary in rows:
-        assert by_command[command].prefix == prefix
-        assert by_command[command].summary == summary
+    for typed, command, summary in rows:
+        assert by_command[command].prefix == typed.split()[-1]
+        assert strip_markup(by_command[command].summary) == summary
 
 
 def test_writing_replaces_an_existing_file(tmp_path, model):
