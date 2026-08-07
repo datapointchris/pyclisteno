@@ -1,6 +1,35 @@
 # CHANGELOG
 
 
+## v0.3.0 (2026-08-07)
+
+### Chores
+
+- Sync shellcheckrc from the toolchain die
+  ([`4681511`](https://github.com/datapointchris/pyclisteno/commit/468151149d242b1ec58b6e09f7356f756c46f9a4))
+
+SC1091/SC1090 go off fleet-wide, with source-following kept on so a variable set in one file and
+  consumed in a library it sources still resolves. Matches pre-commit/configs/shellcheckrc.ini
+  verbatim.
+
+### Features
+
+- Walk the command tree into the grammar model
+  ([`8a15fdd`](https://github.com/datapointchris/pyclisteno/commit/8a15fdd5af93162ff32b3b42231f0e1981b6324f))
+
+Exports the live Click or Typer tree as the JSON model and the flat TSV index the shell reads, with
+  every node carrying its path, kind, typeable invocation, untruncated summary and argument flag.
+  Prefixes stay unset — assignment is the next pass.
+
+The walk matches on shape rather than on click's classes. Typer 0.27 vendors a complete copy of
+  click whose Command derives from ABC and shares no base class with the installed one, so an
+  isinstance check sees a Typer tree as no tree at all and returns an empty model. Matching the
+  shape both expose costs the library its last runtime dependency.
+
+Siblings are sorted because click sorts its commands and Typer keeps declaration order, and
+  assignment reads siblings in order to decide who keeps a contested prefix.
+
+
 ## v0.2.1 (2026-08-06)
 
 ### Bug Fixes
