@@ -1,6 +1,32 @@
 # CHANGELOG
 
 
+## v0.5.0 (2026-08-07)
+
+### Features
+
+- Enroll a CLI in one call with attach()
+  ([`89e9f53`](https://github.com/datapointchris/pyclisteno/commit/89e9f5372816f0f6b829949851cb72b224d5701f))
+
+Walks, assigns, and publishes the two cache files and the ledger. The tool name is inferred from the
+  command, falling back to the invoked script, so adoption stays the single argument the README
+  promises.
+
+Nothing escapes to the caller. A read-only cache directory or a truncated ledger costs enrollment
+  and nothing else, because a tool that dies for either is a tool this library broke; CLISTENO_DEBUG
+  re-raises, since a failure nobody can see is its own kind of broken.
+
+No staleness check, and no fingerprint field on the model to support one. Assignment is pure
+  computation over a tree already in memory, so recomputing costs less than deciding whether to, and
+  write_atomically now skips a write whose content already matches. The rendered text is the
+  fingerprint: nothing to store, and no way for a stored one to disagree with the file it describes.
+  It earns its place on the ledger, which is synced — an identical rewrite still moves the mtime and
+  would wake Syncthing on every invocation of every tool.
+
+Covers the non-invasiveness test: every fixture command at every level, bare and with --help,
+  byte-identical with and without enrollment.
+
+
 ## v0.4.0 (2026-08-07)
 
 ### Features
