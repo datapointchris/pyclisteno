@@ -17,12 +17,15 @@ classifiers = [
 ]
 
 # 3.11 is the tomllib floor, and reading the user's pin file without a TOML
-# dependency is what keeps the dependency list to click alone.
+# dependency is what keeps the dependency list empty.
 requires-python = ">=3.11"
 
-# Click, not Typer: Typer builds its command tree out of Click objects, so
-# walking Click covers both and a plain Click app gets the same treatment.
-dependencies = ["click>=8.1"]
+# No runtime dependencies, click included. Walking click to cover typer as well
+# stopped working at typer 0.27, which vendors its own complete copy of click
+# sharing no base class with the installed one — so the walk matches on the shape
+# both expose rather than on either one's classes, and needs neither installed.
+# See the module docstring in walk.py.
+dependencies = []
 
 [project.urls]
 Repository = "https://github.com/datapointchris/pyclisteno"
@@ -32,6 +35,7 @@ Changelog = "https://github.com/datapointchris/pyclisteno/blob/main/CHANGELOG.md
 [dependency-groups]
 dev = [
     "bandit>=1.7.8",
+    "click>=8.1",
     "mypy>=1.10.0",
     "pre-commit>=4.3.0",
     "pytest>=8.0.0",
