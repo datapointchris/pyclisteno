@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Literal
 
 from pyclisteno import paths
+from pyclisteno.markup import strip_markup
 
 SCHEMA = 1
 
@@ -128,12 +129,13 @@ def render_index(model: Model) -> str:
 
     Column two omits the argument metavars that `use` carries, because the shell
     inserts this text into the buffer and a literal `<alias>` is not typeable.
+    Column three loses its rich tags for the same reason — see markup.py.
     """
     lines = []
     for node in model.nodes():
         if node.prefix is None:
             continue
-        lines.append(f'{node.prefix}\t{" ".join([model.tool, *node.path])}\t{node.summary}')
+        lines.append(f'{node.prefix}\t{" ".join([model.tool, *node.path])}\t{strip_markup(node.summary)}')
     return ''.join(f'{line}\n' for line in lines)
 
 
