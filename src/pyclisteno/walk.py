@@ -31,6 +31,7 @@ from typing import Protocol
 from typing import runtime_checkable
 
 from pyclisteno.marks import is_excluded
+from pyclisteno.marks import pinned_prefix
 from pyclisteno.model import Model
 from pyclisteno.model import Node
 
@@ -153,6 +154,7 @@ def build_node(command: CommandLike, name: str, path: list[str], tool: str) -> N
         excluded=is_excluded(command.callback),
         prefix=None,
         children=children,
+        pin=pinned_prefix(command.callback),
     )
 
 

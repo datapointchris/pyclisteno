@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Literal
 
@@ -45,6 +46,15 @@ class Node:
     excluded: bool
     prefix: str | None
     children: list[Node]
+
+    # In-process only, and deliberately not part of the schema: a `@shortcut`
+    # pin is an *input* to assignment, and the dump records what assignment
+    # decided. `excluded` has to be serialised because a null prefix alone
+    # cannot say whether a node was kept off the fast path or simply had no
+    # valid prefix left; a pin needs no such witness, because the prefix it
+    # produced is right there. Excluded from equality so a walked model still
+    # round-trips through JSON unchanged.
+    pin: str | None = field(default=None, compare=False)
 
     def to_dict(self) -> dict:
         return {

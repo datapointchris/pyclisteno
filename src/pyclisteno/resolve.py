@@ -1,0 +1,83 @@
+"""Expanding a typed sequence back into the full command.
+
+Longest match, one token at a time. Typing the whole name works for the same
+reason the short form does — a name starts with its own prefix, and no other
+sibling's prefix can be a longer match without breaking the invariant assignment
+enforces.
+
+**Retired sequences are dead ends, and resolution has to know about them.**
+Assignment stops a *new* prefix from capturing a retired string, but it cannot
+undo an assignment that already existed: with `review` holding `r` and `runs`
+later retired at `ru`, typing `ru` would fall through to the live `r` and run
+review. The fix is not to lengthen review's prefix — that breaks a sequence
+someone is using today to protect one nobody can use at all — but to let the
+retired string win its own longest match and stop. Typing it reports that the
+command is gone, which is the whole point of never recycling.
+
+Tokens the walk cannot consume are handed back rather than swallowed: everything
+after the last command is that command's arguments, and this is what lets a
+caller expand `dectl sa gl so ru nightly` without knowing where the grammar ends
+and the argument begins.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from pyclisteno.ledger import Ledger
+from pyclisteno.ledger import key_of
+from pyclisteno.ledger import parent_key_of
+from pyclisteno.model import Model
+from pyclisteno.model import Node
+
+
+@dataclass(frozen=True)
+class Resolution:
+    node: Node
+    remainder: list[str]
+    retired: str | None = None
+
+
+def retired_at(ledger: Ledger, parent_key: str) -> list[str]:
+    return [prefix for key, prefixes in ledger.retired.items() if parent_key_of(key) == parent_key for prefix in prefixes]
+
+
+def match_child(node: Node, token: str) -> Node | None:
+    longest = None
+    for child in node.children:
+        if child.prefix is None or not token.startswith(child.prefix):
+            continue
+        if longest is None or len(child.prefix) > len(str(longest.prefix)):
+            longest = child
+    return longest
+
+
+def match_retired(retired: list[str], token: str) -> str | None:
+    matches = [prefix for prefix in retired if token.startswith(prefix)]
+    return max(matches, key=len) if matches else None
+
+
+def resolve(model: Model, tokens: list[str], ledger: Ledger | None = None) -> Resolution:
+    """The deepest node the tokens reach, and whatever is left over.
+
+    A sequence that matches nothing resolves to the root with everything left
+    over, which is the caller's signal that it expanded no further. Passing no
+    ledger resolves against live prefixes alone — correct for a tool that has
+    never retired anything, and the reason the parameter is optional.
+    """
+    node = model.root
+    for index, token in enumerate(tokens):
+        child = match_child(node, token)
+        retired = match_retired(retired_at(ledger, key_of(node.path)), token) if ledger else None
+        if retired is not None and (child is None or len(retired) > len(str(child.prefix))):
+            return Resolution(node=node, remainder=tokens[index:], retired=retired)
+        if child is None:
+            return Resolution(node=node, remainder=tokens[index:])
+        node = child
+    return Resolution(node=node, remainder=[])
+
+
+def expand(model: Model, tokens: list[str], ledger: Ledger | None = None) -> list[str]:
+    """The typed sequence as the command it stands for, arguments intact."""
+    resolution = resolve(model, tokens, ledger)
+    return [model.tool, *resolution.node.path, *resolution.remainder]

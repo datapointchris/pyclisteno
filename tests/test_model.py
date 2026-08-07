@@ -2,7 +2,9 @@ import json
 
 import pytest
 
+from pyclisteno.assign import assign
 from pyclisteno.fixture import build_fixture_app
+from pyclisteno.ledger import Ledger
 from pyclisteno.model import Model
 from pyclisteno.model import export
 from pyclisteno.model import load_model
@@ -76,6 +78,23 @@ def test_export_writes_both_cache_files(tmp_path, model, monkeypatch):
 
     assert load_model(tmp_path / 'clisteno' / 'hostile.json') == model
     assert (tmp_path / 'clisteno' / 'hostile.tsv').read_text().startswith('de\thostile destroy\t')
+
+
+def test_the_index_agrees_with_the_model_it_was_written_from(tmp_path, model, monkeypatch):
+    """Both files come from one walk, so a row in one and no node in the other is a bug."""
+    monkeypatch.setenv('XDG_CACHE_HOME', str(tmp_path))
+    assign(model, Ledger(tool='hostile'), {})
+
+    export(model)
+
+    reloaded = load_model(tmp_path / 'clisteno' / 'hostile.json')
+    rows = [line.split('\t') for line in (tmp_path / 'clisteno' / 'hostile.tsv').read_text().splitlines()]
+    by_command = {' '.join([reloaded.tool, *node.path]): node for node in reloaded.nodes() if node.prefix}
+
+    assert len(rows) == len(by_command)
+    for prefix, command, summary in rows:
+        assert by_command[command].prefix == prefix
+        assert by_command[command].summary == summary
 
 
 def test_writing_replaces_an_existing_file(tmp_path, model):
