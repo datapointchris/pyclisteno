@@ -7,11 +7,13 @@ from pyclisteno.fixture import build_fixture_app
 from pyclisteno.ledger import Ledger
 from pyclisteno.markup import strip_markup
 from pyclisteno.model import Model
+from pyclisteno.model import Node
 from pyclisteno.model import export
 from pyclisteno.model import index_rows
 from pyclisteno.model import load_model
 from pyclisteno.model import render_index
 from pyclisteno.model import render_model
+from pyclisteno.model import sequences
 from pyclisteno.model import write_atomically
 from pyclisteno.walk import walk
 
@@ -44,11 +46,11 @@ def test_the_index_holds_only_what_assignment_has_reached(model):
 
 
 def test_the_index_is_the_typed_sequence_then_the_command_then_the_summary(model):
-    """Column one is what the user types, which is every ancestor's prefix and then this node's."""
+    """Column one is what the user types: every ancestor's prefix and this node's, run together."""
     for path, prefix in ((['glue'], 'g'), (['glue', 'nightly'], 'n'), (['glue', 'nightly', 'run'], 'ru')):
         next(node for node in model.nodes() if node.path == path).prefix = prefix
 
-    assert render_index(model).splitlines()[-1] == 'g n ru\thostile glue nightly run\tStart the job and wait for it.'
+    assert render_index(model).splitlines()[-1] == 'gnru\thostile glue nightly run\tStart the job and wait for it.'
 
 
 def test_every_typed_sequence_in_the_index_is_unique(model):
@@ -110,9 +112,9 @@ def test_the_index_agrees_with_the_model_it_was_written_from(tmp_path, model, mo
     rows = [line.split('\t') for line in (tmp_path / 'clisteno' / 'hostile.tsv').read_text().splitlines()]
     by_command = {' '.join([reloaded.tool, *node.path]): node for node in reloaded.nodes() if node.prefix}
 
-    assert len(rows) == len(by_command)
     for typed, command, summary in rows:
-        assert by_command[command].prefix == typed.split()[-1]
+        assert typed.endswith(str(by_command[command].prefix))
+        assert ' ' not in typed
         assert strip_markup(by_command[command].summary) == summary
 
 
@@ -121,3 +123,46 @@ def test_writing_replaces_an_existing_file(tmp_path, model):
     write_atomically(destination, 'stale\n')
     write_atomically(destination, 'fresh\n')
     assert destination.read_text() == 'fresh\n'
+
+
+def leaf(name, prefix, path):
+    return Node(path=path, name=name, kind='command', use='', summary='', takes_argument=False, excluded=False, prefix=prefix, children=[])
+
+
+def test_a_sequence_two_commands_would_both_answer_to_is_published_by_neither():
+    """Running the prefixes together loses the level boundaries, so a string can parse twice.
+
+    Built by hand rather than walked, because sibling unambiguity makes this hard
+    to reach from a real tree — `alpha` beside `abbey` separates to `al` and `ab`
+    rather than colliding. The rule still has to hold for the trees that do.
+    """
+    parent = leaf('one', 'a', ['one'])
+    parent.kind = 'group'
+    parent.children = [leaf('two', 'b', ['one', 'two'])]
+    root = Node(
+        path=[],
+        name='demo',
+        kind='group',
+        use='',
+        summary='',
+        takes_argument=False,
+        excluded=False,
+        prefix=None,
+        children=[parent, leaf('other', 'ab', ['other'])],
+    )
+    model = Model(tool='demo', tool_version=None, root=root)
+
+    assert sorted(typed for _, typed in sequences(model)) == ['a', 'ab', 'ab']
+    assert [typed for typed, _, _ in index_rows(model)] == ['a']
+
+
+def test_a_sequence_that_is_also_a_real_command_name_is_withheld(model):
+    """`runs` is a command, so typing it must reach that command and not be reinterpreted."""
+    assign(model, Ledger(tool='hostile'), {})
+    assert 'runs' in {typed for _, typed in sequences(model)}
+    assert 'runs' not in {typed for typed, _, _ in index_rows(model)}
+
+
+def test_a_sequence_never_contains_a_space(model):
+    assign(model, Ledger(tool='hostile'), {})
+    assert [typed for typed, _, _ in index_rows(model) if ' ' in typed] == []

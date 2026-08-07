@@ -75,7 +75,7 @@ def test_teaching_on_puts_the_short_form_in_the_parents_listing(stores):
     app = build_fixture_app()
     attach(app, tool='hostile', teaching=True)
     rendered = help_for(app)
-    assert '(runs)' in rendered
+    assert '(ru)' in rendered
     assert '(g)' in rendered
 
 
@@ -83,8 +83,8 @@ def test_the_hint_reaches_every_level(stores):
     """Three levels down, past the alias `glue` takes as an argument."""
     app = build_fixture_app()
     attach(app, tool='hostile', teaching=True)
-    assert '(n) The overnight full load.' in help_for(app, ['glue', 'some-alias'])
-    assert '(re) Read the last outcome.' in help_for(app, ['glue', 'some-alias', 'nightly'])
+    assert '(gn) The overnight full load.' in help_for(app, ['glue', 'some-alias'])
+    assert '(gnre) Read the last outcome.' in help_for(app, ['glue', 'some-alias', 'nightly'])
 
 
 def test_an_excluded_command_is_shown_without_a_hint(stores):

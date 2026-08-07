@@ -26,6 +26,7 @@ def hostile():
         (['review'], ['hostile', 'review']),
         (['runs'], ['hostile', 'runs']),
         (['g'], ['hostile', 'glue']),
+        (['gnru'], ['hostile', 'glue', 'nightly', 'run']),
     ],
 )
 def test_longest_match_reaches_the_command_that_was_typed(hostile, typed, expanded):
@@ -33,7 +34,7 @@ def test_longest_match_reaches_the_command_that_was_typed(hostile, typed, expand
 
 
 def test_a_sequence_expands_one_prefix_per_level(hostile):
-    assert expand(hostile, ['g', 'n', 'ru']) == ['hostile', 'glue', 'nightly', 'run']
+    assert expand(hostile, ['gnru']) == ['hostile', 'glue', 'nightly', 'run']
 
 
 def test_typing_the_whole_thing_reaches_the_same_place(hostile):
@@ -46,7 +47,7 @@ def test_a_genuinely_ambiguous_token_reaches_nothing(hostile):
 
 
 def test_arguments_after_the_command_are_handed_back(hostile):
-    assert expand(hostile, ['g', 'n', 'ru', 'yesterday']) == ['hostile', 'glue', 'nightly', 'run', 'yesterday']
+    assert expand(hostile, ['gnru', 'yesterday']) == ['hostile', 'glue', 'nightly', 'run', 'yesterday']
 
 
 def test_an_unknown_token_stops_the_walk_without_swallowing_it(hostile):
@@ -102,13 +103,13 @@ def test_resolving_without_a_ledger_uses_live_prefixes_alone(hostile):
 
 
 def test_expanding_argv_rewrites_a_short_sequence(hostile):
-    argv = ['hostile', 'g', 'n', 'ru']
+    argv = ['hostile', 'gnru']
     assert expand_argv(hostile, None, argv) is True
     assert argv == ['hostile', 'glue', 'nightly', 'run']
 
 
 def test_expanding_argv_keeps_the_arguments_after_the_command(hostile):
-    argv = ['hostile', 'g', 'n', 'ru', '--follow', 'yesterday']
+    argv = ['hostile', 'gnru', '--follow', 'yesterday']
     expand_argv(hostile, None, argv)
     assert argv == ['hostile', 'glue', 'nightly', 'run', '--follow', 'yesterday']
 
@@ -128,9 +129,9 @@ def test_an_unknown_sequence_is_left_for_the_cli_to_reject(hostile):
 
 def test_a_leading_option_passes_through_untouched(hostile):
     """`--env prod` must not be reinterpreted as a sequence."""
-    argv = ['hostile', '--verbose', 'g', 'n']
+    argv = ['hostile', '--verbose', 'gn']
     assert expand_argv(hostile, None, argv) is False
-    assert argv == ['hostile', '--verbose', 'g', 'n']
+    assert argv == ['hostile', '--verbose', 'gn']
 
 
 def test_no_arguments_at_all_is_left_alone(hostile):
@@ -162,12 +163,12 @@ def test_argv_is_only_rewritten_when_the_program_is_the_tool(hostile):
     pytest collecting a module that calls `attach` would otherwise have its own
     arguments rewritten out from under it.
     """
-    argv = ['pytest', 'g', 'n', 'ru']
+    argv = ['pytest', 'gnru']
     assert expand_argv(hostile, None, argv) is False
-    assert argv == ['pytest', 'g', 'n', 'ru']
+    assert argv == ['pytest', 'gnru']
 
 
 def test_the_tool_is_matched_by_name_not_by_the_whole_path(hostile):
-    argv = ['/usr/local/bin/hostile', 'g', 'n', 'ru']
+    argv = ['/usr/local/bin/hostile', 'gnru']
     assert expand_argv(hostile, None, argv) is True
     assert argv[1:] == ['glue', 'nightly', 'run']

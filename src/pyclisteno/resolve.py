@@ -31,6 +31,7 @@ from pyclisteno.ledger import key_of
 from pyclisteno.ledger import parent_key_of
 from pyclisteno.model import Model
 from pyclisteno.model import Node
+from pyclisteno.model import unambiguous_sequences
 
 
 @dataclass(frozen=True)
@@ -59,14 +60,27 @@ def match_retired(retired: list[str], token: str) -> str | None:
     return max(matches, key=len) if matches else None
 
 
+def sequence_index(model: Model) -> dict[str, Node]:
+    return {typed: node for node, typed in unambiguous_sequences(model)}
+
+
 def resolve(model: Model, tokens: list[str], ledger: Ledger | None = None) -> Resolution:
     """The deepest node the tokens reach, and whatever is left over.
 
-    A sequence that matches nothing resolves to the root with everything left
-    over, which is the caller's signal that it expanded no further. Passing no
-    ledger resolves against live prefixes alone — correct for a tool that has
-    never retired anything, and the reason the parameter is optional.
+    The whole sequence in one token is tried first, and it has to be: `exgsr`
+    also starts with `ex`, so the per-token walk below would happily answer it
+    with `example-pipeline` and drop the rest on the floor.
+
+    The walk still runs for everything else, and it is what makes the long form
+    work — a name starts with its own prefix. A sequence that matches nothing
+    resolves to the root with everything left over, which is the caller's signal
+    that it expanded no further. Passing no ledger resolves against live prefixes
+    alone, correct for a tool that has never retired anything.
     """
+    if tokens:
+        whole = sequence_index(model).get(tokens[0])
+        if whole is not None:
+            return Resolution(node=whole, remainder=tokens[1:])
     node = model.root
     for index, token in enumerate(tokens):
         child = match_child(node, token)

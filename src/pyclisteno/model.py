@@ -16,6 +16,7 @@ help rendering.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from collections.abc import Iterator
 from dataclasses import dataclass
 from dataclasses import field
@@ -124,34 +125,58 @@ def render_model(model: Model) -> str:
     return json.dumps(model.to_dict(), indent=2) + '\n'
 
 
+def sequences(model: Model) -> list[tuple[Node, str]]:
+    """Every reachable node and the single token that types it.
+
+    The sequence is every ancestor's prefix followed by the node's own, run
+    together with no separator: `exgsr`, not `ex g s r`. One stroke rather than
+    four words is the whole point of the analogy the library is named for, and
+    it is what the design settled on before the spaces crept in.
+
+    A node under an unassigned parent is unreachable however short its own prefix
+    is, so the walk stops rather than producing a sequence nothing can type.
+    """
+    found: list[tuple[Node, str]] = []
+
+    def descend(node: Node, sequence: str) -> None:
+        for child in node.children:
+            if child.prefix is None:
+                continue
+            typed = sequence + child.prefix
+            found.append((child, typed))
+            descend(child, typed)
+
+    descend(model.root, '')
+    return found
+
+
+def unambiguous_sequences(model: Model) -> list[tuple[Node, str]]:
+    """Sequences no other command also answers to.
+
+    Running the prefixes together loses the level boundaries, so a string can
+    parse more than one way — and any string that does is, by construction, the
+    concatenation of two different paths. A duplicate is therefore the whole test,
+    and a sequence that fails it is published by nobody rather than silently won
+    by whichever command sorted first.
+
+    Names are held back too. A root command called `env` must not be swallowed by
+    some deeper path that happens to run together as `env`, because the token a
+    user typed is a real command and the CLI can answer it itself.
+    """
+    found = sequences(model)
+    seen = Counter(typed for _, typed in found)
+    names = {child.name for child in model.root.children}
+    return [(node, typed) for node, typed in found if seen[typed] == 1 and typed not in names]
+
+
 def index_rows(model: Model) -> list[tuple[str, str, str]]:
     """The typed sequence, the command it stands for, and the summary.
-
-    Column one is the whole sequence — every ancestor's prefix, then the node's —
-    and not the node's own prefix alone. A prefix is only unique among siblings,
-    so `r` names five different commands in a tool of any size; the sequence is
-    what a user types and therefore the only thing the shell can look up. Getting
-    this wrong produced an index with eleven colliding keys.
 
     Column two omits the argument metavars that `use` carries, because the shell
     inserts this text into the buffer and a literal `<alias>` is not typeable.
     Column three loses its rich tags for the same reason — see markup.py.
-
-    A node under an unassigned parent is unreachable however short its own prefix
-    is, so the walk stops rather than emitting a sequence nothing can type.
     """
-    rows = []
-
-    def descend(node: Node, sequence: list[str]) -> None:
-        for child in node.children:
-            if child.prefix is None:
-                continue
-            typed = [*sequence, child.prefix]
-            rows.append((' '.join(typed), ' '.join([model.tool, *child.path]), strip_markup(child.summary)))
-            descend(child, typed)
-
-    descend(model.root, [])
-    return rows
+    return [(typed, ' '.join([model.tool, *node.path]), strip_markup(node.summary)) for node, typed in unambiguous_sequences(model)]
 
 
 def render_index(model: Model) -> str:

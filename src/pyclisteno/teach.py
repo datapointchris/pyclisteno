@@ -40,8 +40,9 @@ mechanism.
 
 from __future__ import annotations
 
-from pyclisteno.ledger import key_of
+from pyclisteno.ledger import key_of as path_key
 from pyclisteno.model import Model
+from pyclisteno.model import unambiguous_sequences
 from pyclisteno.walk import TyperAppLike
 from pyclisteno.walk import commands_by_path
 
@@ -92,10 +93,14 @@ def targets_for(app: object) -> dict[str, object]:
 
 
 def teach(app: object, model: Model) -> None:
-    """Write each assigned node's short form into the row its parent renders."""
+    """Write each node's short form into the row its parent renders.
+
+    The whole sequence, not the node's own prefix: `exgsr` is what a reader can
+    act on, and `r` on its own names five different commands. A node with no
+    unambiguous sequence gets no hint rather than a misleading one.
+    """
     targets = targets_for(app)
-    for node in model.nodes():
-        target = targets.get(key_of(node.path))
-        if node.prefix is None or target is None:
-            continue
-        target.short_help = hint(node.prefix, node.summary)  # type: ignore[attr-defined]
+    for node, typed in unambiguous_sequences(model):
+        target = targets.get(path_key(node.path))
+        if target is not None:
+            target.short_help = hint(typed, node.summary)  # type: ignore[attr-defined]

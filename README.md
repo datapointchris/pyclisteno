@@ -4,9 +4,9 @@ A learned shortcut, hint, and completion layer for Python CLIs built on Click or
 
 Stenography compresses language by rule rather than by lookup table, which is why trained
 stenographers reach speed without memorising a second vocabulary. `clisteno` does the same thing
-to a command tree: the short form of a command is a literal prefix of the long form, so typing
-`dectl sa gl so ru` is typing `dectl salesdata glue source-copy run` with less of it, not typing
-an alias that has to be learned separately.
+to a command tree: each level contributes a prefix of its own name and they run together into one
+stroke, so `dectl saglsoru` is `dectl salesdata glue source-copy run` with less of it, not an
+alias that has to be learned separately.
 
 ## What it provides
 
@@ -45,12 +45,13 @@ Each row in a parent's help then carries the short form of the command it names.
 
 ```text
 run      (ru) Run the thing, and keep running it until something says otherwise.
-runs     (runs) List previous runs.
+runs     List previous runs.
 destroy  Delete everything, permanently and without confirmation.
 ```
 
-`runs` shows its whole name because `run` is a strict prefix of it, and `destroy` shows no short
-form at all — see `@no_shortcut` below.
+`destroy` shows no short form because of `@no_shortcut` below. `runs` shows none for a different
+reason: `run` is a strict prefix of it, so its own sequence *is* `runs`, and a sequence that is
+already a command name is withheld — typing it should reach that command, not be reinterpreted.
 
 Compression is the other half, and the half that makes the offer true: without it the short form
 is advice the tool would reject.
@@ -60,7 +61,9 @@ attach(app, teaching=True, expanding=True)
 ```
 
 `expanding` rewrites a typed sequence into the command it stands for before the CLI parses it, so
-`tool ex g s r` runs `tool example-pipeline glue source-copy run`. It is the only surface that can
+`tool exgsr` runs `tool example-pipeline glue source-copy run`. The whole sequence is matched
+before the per-token walk, because `exgsr` also starts with `ex` and the walk alone would answer
+it with `example-pipeline` and drop the rest. It is the only surface that can
 make a CLI run something other than what was typed, so it declines wherever it is not certain: an
 unknown token, a retired sequence, or anything after a leading option is passed through untouched
 for the CLI itself to answer. A real command name expands to itself, because a name starts with
@@ -82,7 +85,9 @@ def destroy(): ...
 ## How prefixes are assigned
 
 Each node gets the shortest prefix of its own name that is unambiguous among its siblings, so
-`run` and `review` become `ru` and `re`. Assignments are recorded and **grandfathered**: once a
+`run` and `review` become `ru` and `re`, and a command's sequence is its ancestors' prefixes and
+its own run together. Two paths that run together into the same string are published by neither,
+since nothing could tell which one was meant. Assignments are recorded and **grandfathered**: once a
 prefix has been handed out it is never shortened, lengthened, or reassigned, because the whole
 point is protecting a sequence already in someone's fingers. Resolution is longest-match, which is
 what lets an incumbent `r` coexist with a later `re`. A removed command's prefix is retired
