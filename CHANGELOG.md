@@ -1,6 +1,31 @@
 # CHANGELOG
 
 
+## v0.4.0 (2026-08-07)
+
+### Features
+
+- Assign grandfathered prefixes and resolve them back
+  ([`e6095a3`](https://github.com/datapointchris/pyclisteno/commit/e6095a3ee1ae3393b931f92b92da496debe1bebf))
+
+Each node takes the shortest prefix of its own name that no sibling name shares, so review and run
+  become re and ru rather than one of them taking a bare r that means nothing definite. The ledger
+  grandfathers whatever was handed out before, so a sibling arriving later lengthens its own prefix
+  and never an incumbent's. Precedence runs config pin, source pin, ledger, computed, each falling
+  through to the next where it does not fit.
+
+Correctness reduces to one rule over live siblings A and B: if prefix(A) is a prefix of name(B) then
+  prefix(A) is no longer than prefix(B). That is what stops runs taking ru or run while run holds r,
+  and it is checked directly by a sweep asserting every prefix of every name reaches its own
+  command.
+
+Retirement needed splitting in two. A retired string is never reissued and no new prefix may be
+  short enough to swallow it, but neither rule reaches backwards: a prefix assigned before the
+  retirement can still capture it. Taking it off the incumbent would break a sequence in use today
+  to protect one nobody can use at all, so resolution lets a retired string win its own longest
+  match and stop there.
+
+
 ## v0.3.0 (2026-08-07)
 
 ### Chores
