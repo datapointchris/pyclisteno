@@ -1,6 +1,44 @@
 # CHANGELOG
 
 
+## v0.6.0 (2026-08-07)
+
+### Documentation
+
+- Document teaching and the pin file format
+  ([`fd140df`](https://github.com/datapointchris/pyclisteno/commit/fd140df217259da7a3d4b38facdbf7534acec96e))
+
+"Commands are never modified" was true until teaching shipped, and the pin file had a format nothing
+  described. Both now say what the code does, including that an unusable pin is dropped rather than
+  raised on.
+
+### Features
+
+- Show each command's short form in its parent's help
+  ([`4117393`](https://github.com/datapointchris/pyclisteno/commit/4117393b4ddffc29499172ce0503986a7a9f1850))
+
+attach(app, teaching=True) writes the assigned prefix into the row a parent renders for each child,
+  so ordinary use trains the fast path. Off by default, because it is the one surface that
+  deliberately changes what a CLI prints.
+
+run (ru) Run the thing, and keep running it until something… runs (runs) List previous runs. destroy
+  Delete everything, permanently and without confirmation.
+
+It writes short_help rather than patching the renderer, which is what keeps it compatible with the
+  settled rule that Python help is rich's with rich's defaults — a library that swapped the
+  formatter would make every tool adopting it the odd one.
+
+Where it writes depends on who built the tree, and getting it wrong fails silently. A click command
+  is the object that runs, so writing to it works. A typer one is not: get_command rebuilds the tree
+  on every call, so the first attempt mutated commands that were then thrown away and the hint never
+  appeared. The durable target is typer's own CommandInfo and TyperInfo. Names come from typer's
+  get_command_name rather than a reimplementation of its rules, with a test that fails if that ever
+  stops lining up with the walked tree.
+
+Parentheses, not brackets — the help rows already use <id> and [id] for required and optional
+  arguments.
+
+
 ## v0.5.0 (2026-08-07)
 
 ### Features
