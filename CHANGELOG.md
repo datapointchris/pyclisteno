@@ -1,6 +1,26 @@
 # CHANGELOG
 
 
+## v0.6.1 (2026-08-07)
+
+### Bug Fixes
+
+- Strip rich tags from the index the shell reads
+  ([`3820d21`](https://github.com/datapointchris/pyclisteno/commit/3820d21be91703dba12434a1d44813bb42b2cbdb))
+
+dectl's first real dump exposed it: its summaries carry markup, because Python help is rich's, so
+  the flat index handed the shell rows reading "Glue job [bold]source-copy[/bold] →
+  my-{env}-source-copy-job". That column goes onto the command line, where those are literal
+  characters.
+
+The JSON keeps the tags — a rich-aware renderer wants them — and only the index loses them, so the
+  model stays a faithful record and the rich knowledge sits in one function.
+
+The rule is rich's own: a bracket is a tag when Style.parse accepts what is inside it. That keeps
+  [id], [OPTIONS] and [RUN_ID], which is what a help row means by square brackets and exactly what a
+  blunt strip would have eaten.
+
+
 ## v0.6.0 (2026-08-07)
 
 ### Documentation
