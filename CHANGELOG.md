@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.7.1 (2026-08-07)
+
+### Bug Fixes
+
+- Only rewrite argv when the program is the tool
+  ([`18dd124`](https://github.com/datapointchris/pyclisteno/commit/18dd1247c75ee4ee0a55373ae541154374ae5ea3))
+
+Enrollment happens at import, and an import is not always a run. pytest collecting a module that
+  calls attach(expanding=True) would have had its own arguments rewritten out from under it, and so
+  would anything else importing the CLI — a REPL, a docs builder, another tool.
+
+The basename of argv[0] has to match the tool before its argv is anyone's business.
+
+
 ## v0.7.0 (2026-08-07)
 
 ### Features
