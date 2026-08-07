@@ -28,6 +28,7 @@ from pyclisteno.ledger import save_ledger
 from pyclisteno.model import Model
 from pyclisteno.model import export
 from pyclisteno.pins import load_pins
+from pyclisteno.teach import teach
 from pyclisteno.walk import CommandLike
 from pyclisteno.walk import as_command
 from pyclisteno.walk import walk
@@ -44,20 +45,28 @@ def infer_tool(command: CommandLike) -> str:
     return command.name or Path(sys.argv[0]).name
 
 
-def enroll(app: object, tool: str | None, version: str | None) -> Model:
+def enroll(app: object, tool: str | None, version: str | None, teaching: bool) -> Model:
     command = as_command(app)
     name = tool or infer_tool(command)
     pins = load_pins(name)
     model = walk(command, name, version)
     save_ledger(assign(model, load_ledger(name), pins))
     export(model)
+    if teaching:
+        # The app, not the converted command: a typer tree is rebuilt on every
+        # conversion, so what runs is never the object the walk just read.
+        teach(app, model)
     return model
 
 
-def attach(app: object, tool: str | None = None, version: str | None = None) -> Model | None:
-    """Walk, assign, publish. Returns the assigned model, or None if anything went wrong."""
+def attach(app: object, tool: str | None = None, version: str | None = None, teaching: bool = False) -> Model | None:
+    """Walk, assign, publish. Returns the assigned model, or None if anything went wrong.
+
+    `teaching` is the one argument that changes what the CLI prints, and it is off
+    by default so that adopting the library proves nothing about its output first.
+    """
     try:
-        return enroll(app, tool, version)
+        return enroll(app, tool, version, teaching)
     except Exception:
         if os.environ.get(DEBUG_VARIABLE):
             raise

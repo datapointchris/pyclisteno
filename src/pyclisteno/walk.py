@@ -161,3 +161,28 @@ def build_node(command: CommandLike, name: str, path: list[str], tool: str) -> N
 def walk(app: object, tool: str, version: str | None = None) -> Model:
     """Walk a finished command tree into a model, prefixes unassigned."""
     return Model(tool=tool, tool_version=version, root=build_node(as_command(app), tool, [], tool))
+
+
+def commands_by_path(app: object) -> dict[str, CommandLike]:
+    """Every live command, keyed the way the model keys its nodes.
+
+    A second traversal rather than a reference to each command hung off its node:
+    a Node is a serialisable record of the grammar, and putting a live object on
+    one makes the thing that gets written to disk own the thing that cannot be.
+    Only teaching needs the commands themselves, and only while the process runs.
+    """
+    found: dict[str, CommandLike] = {}
+
+    def descend(command: CommandLike, name: str, path: list[str]) -> None:
+        found[' '.join(path)] = command
+        if not is_group(command):
+            return
+        context = command.context_class(command, info_name=name)
+        for child_name in sorted(command.list_commands(context)):  # type: ignore[attr-defined]
+            child = command.get_command(context, child_name)  # type: ignore[attr-defined]
+            if child is not None:
+                descend(child, child_name, [*path, child_name])
+
+    root = as_command(app)
+    descend(root, root.name or '', [])
+    return found
