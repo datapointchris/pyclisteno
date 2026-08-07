@@ -1,6 +1,28 @@
 # CHANGELOG
 
 
+## v0.7.0 (2026-08-07)
+
+### Features
+
+- Expand a typed sequence before the CLI parses it
+  ([`bb1dcbe`](https://github.com/datapointchris/pyclisteno/commit/bb1dcbe7f78481cfb95feed01c555a5c169b21d9))
+
+attach(app, expanding=True) rewrites argv, so `tool ex g s r` runs `tool example-pipeline glue
+  source-copy run`. Without it the teaching hint offers a command the tool rejects, which makes this
+  the half that turns the short form from advice into something that works.
+
+The only surface here that can make a CLI run something other than what was typed, so it declines
+  wherever it is not certain rather than guessing: an unknown token, a retired sequence, and
+  anything following a leading option all pass through for the CLI to answer itself. Expanding to
+  the node reached *before* a retired sequence would run an ancestor of a command that no longer
+  exists, which is the silent wrong answer retirement exists to prevent.
+
+A real command name expands to itself. A name starts with its own prefix and no sibling's prefix can
+  outmatch it — the invariant assignment maintains is exactly what keeps this from shadowing
+  anything.
+
+
 ## v0.6.2 (2026-08-07)
 
 ### Bug Fixes
