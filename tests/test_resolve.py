@@ -154,3 +154,20 @@ def test_a_retired_sequence_is_left_alone_rather_than_half_expanded():
     argv = ['demo', 'ru']
     assert expand_argv(shrunk_model, shrunk, argv) is False
     assert argv == ['demo', 'ru']
+
+
+def test_argv_is_only_rewritten_when_the_program_is_the_tool(hostile):
+    """Enrollment happens at import, and an import is not always a run.
+
+    pytest collecting a module that calls `attach` would otherwise have its own
+    arguments rewritten out from under it.
+    """
+    argv = ['pytest', 'g', 'n', 'ru']
+    assert expand_argv(hostile, None, argv) is False
+    assert argv == ['pytest', 'g', 'n', 'ru']
+
+
+def test_the_tool_is_matched_by_name_not_by_the_whole_path(hostile):
+    argv = ['/usr/local/bin/hostile', 'g', 'n', 'ru']
+    assert expand_argv(hostile, None, argv) is True
+    assert argv[1:] == ['glue', 'nightly', 'run']

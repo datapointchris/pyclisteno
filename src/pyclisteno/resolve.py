@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 from pyclisteno.ledger import Ledger
 from pyclisteno.ledger import key_of
@@ -105,6 +106,12 @@ def expand_argv(model: Model, ledger: Ledger | None = None, argv: list[str] | No
     argv = sys.argv if argv is None else argv
     tokens = argv[1:]
     if not tokens:
+        return False
+    # Enrollment happens at import, and an import is not always a run: pytest
+    # collecting a module that calls `attach` would otherwise have its own
+    # arguments rewritten, and so would anything else importing the CLI. The
+    # program has to actually be the tool before its argv is anyone's business.
+    if Path(argv[0]).name != model.tool:
         return False
     resolution = resolve(model, tokens, ledger)
     if resolution.retired is not None or not resolution.node.path:
