@@ -5,6 +5,7 @@ from pyclisteno.assign import assign
 from pyclisteno.fixture import build_fixture_app
 from pyclisteno.ledger import Ledger
 from pyclisteno.resolve import expand
+from pyclisteno.resolve import expand_argv
 from pyclisteno.resolve import resolve
 from pyclisteno.walk import walk
 
@@ -98,3 +99,58 @@ def test_a_live_prefix_longer_than_a_retired_one_still_wins():
 
 def test_resolving_without_a_ledger_uses_live_prefixes_alone(hostile):
     assert expand(hostile, ['ru'], None) == ['hostile', 'run']
+
+
+def test_expanding_argv_rewrites_a_short_sequence(hostile):
+    argv = ['hostile', 'g', 'n', 'ru']
+    assert expand_argv(hostile, None, argv) is True
+    assert argv == ['hostile', 'glue', 'nightly', 'run']
+
+
+def test_expanding_argv_keeps_the_arguments_after_the_command(hostile):
+    argv = ['hostile', 'g', 'n', 'ru', '--follow', 'yesterday']
+    expand_argv(hostile, None, argv)
+    assert argv == ['hostile', 'glue', 'nightly', 'run', '--follow', 'yesterday']
+
+
+def test_a_real_command_name_expands_to_itself(hostile):
+    """The invariant is what stops this shadowing anything a user actually typed."""
+    argv = ['hostile', 'glue', 'nightly', 'run']
+    assert expand_argv(hostile, None, argv) is False
+    assert argv == ['hostile', 'glue', 'nightly', 'run']
+
+
+def test_an_unknown_sequence_is_left_for_the_cli_to_reject(hostile):
+    argv = ['hostile', 'zzz', 'and-more']
+    assert expand_argv(hostile, None, argv) is False
+    assert argv == ['hostile', 'zzz', 'and-more']
+
+
+def test_a_leading_option_passes_through_untouched(hostile):
+    """`--env prod` must not be reinterpreted as a sequence."""
+    argv = ['hostile', '--verbose', 'g', 'n']
+    assert expand_argv(hostile, None, argv) is False
+    assert argv == ['hostile', '--verbose', 'g', 'n']
+
+
+def test_no_arguments_at_all_is_left_alone(hostile):
+    argv = ['hostile']
+    assert expand_argv(hostile, None, argv) is False
+    assert argv == ['hostile']
+
+
+def test_an_excluded_command_cannot_be_reached_by_expansion(hostile):
+    argv = ['hostile', 'd']
+    assert expand_argv(hostile, None, argv) is False
+
+
+def test_a_retired_sequence_is_left_alone_rather_than_half_expanded():
+    """Expanding to the node reached before it would run an ancestor of a dead command."""
+    model = walk(app_with('review', 'runs'), 'demo')
+    ledger = assign(model, Ledger(tool='demo'), {})
+    shrunk_model = walk(app_with('review'), 'demo')
+    shrunk = assign(shrunk_model, ledger, {})
+
+    argv = ['demo', 'ru']
+    assert expand_argv(shrunk_model, shrunk, argv) is False
+    assert argv == ['demo', 'ru']

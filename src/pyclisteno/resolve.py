@@ -22,6 +22,7 @@ and the argument begins.
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 
 from pyclisteno.ledger import Ledger
@@ -81,3 +82,35 @@ def expand(model: Model, tokens: list[str], ledger: Ledger | None = None) -> lis
     """The typed sequence as the command it stands for, arguments intact."""
     resolution = resolve(model, tokens, ledger)
     return [model.tool, *resolution.node.path, *resolution.remainder]
+
+
+def expand_argv(model: Model, ledger: Ledger | None = None, argv: list[str] | None = None) -> bool:
+    """Rewrite a typed sequence in place, before the CLI parses it. True if anything changed.
+
+    Conservative by construction, because this is the one surface that can make a
+    CLI run a command its user did not type:
+
+    - A sequence that reaches nothing is left alone, so an unknown token produces
+      the CLI's own error rather than a truncated command.
+    - A retired sequence is left alone for the same reason. Expanding to the node
+      reached *before* it would run an ancestor of a command that no longer
+      exists, which is the silent wrong answer retirement exists to prevent.
+    - A leading option stops the walk at the first token, so `--env prod` and
+      anything like it passes through untouched rather than being reinterpreted.
+
+    A real command name expands to itself, since a name starts with its own
+    prefix and no sibling's prefix can outmatch it — that is the invariant
+    assignment maintains, and it is what keeps this from shadowing anything.
+    """
+    argv = sys.argv if argv is None else argv
+    tokens = argv[1:]
+    if not tokens:
+        return False
+    resolution = resolve(model, tokens, ledger)
+    if resolution.retired is not None or not resolution.node.path:
+        return False
+    expanded = [*resolution.node.path, *resolution.remainder]
+    if expanded == tokens:
+        return False
+    argv[1:] = expanded
+    return True

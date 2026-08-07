@@ -52,6 +52,20 @@ destroy  Delete everything, permanently and without confirmation.
 `runs` shows its whole name because `run` is a strict prefix of it, and `destroy` shows no short
 form at all — see `@no_shortcut` below.
 
+Compression is the other half, and the half that makes the offer true: without it the short form
+is advice the tool would reject.
+
+```python
+attach(app, teaching=True, expanding=True)
+```
+
+`expanding` rewrites a typed sequence into the command it stands for before the CLI parses it, so
+`tool ex g s r` runs `tool example-pipeline glue source-copy run`. It is the only surface that can
+make a CLI run something other than what was typed, so it declines wherever it is not certain: an
+unknown token, a retired sequence, or anything after a leading option is passed through untouched
+for the CLI itself to answer. A real command name expands to itself, because a name starts with
+its own prefix and no sibling's can outmatch it.
+
 Decorators exist only for exceptions:
 
 ```python

@@ -13,7 +13,8 @@ from pyclisteno.model import SCHEMA
 from pyclisteno.model import Model
 from pyclisteno.model import Node
 from pyclisteno.resolve import expand
+from pyclisteno.resolve import expand_argv
 from pyclisteno.resolve import resolve
 from pyclisteno.walk import walk
 
-__all__ = ['SCHEMA', 'Model', 'Node', 'attach', 'expand', 'no_shortcut', 'resolve', 'shortcut', 'walk']
+__all__ = ['SCHEMA', 'Model', 'Node', 'attach', 'expand', 'expand_argv', 'no_shortcut', 'resolve', 'shortcut', 'walk']
