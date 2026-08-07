@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.8.0 (2026-08-07)
+
+### Features
+
+- Make the short form one stroke, not one word per level
+  ([`1360b8d`](https://github.com/datapointchris/pyclisteno/commit/1360b8d9e97158f59c6963f6439f6c61301d9d69))
+
+`dectl exgsr`, not `dectl ex g s r`. The prefixes run together with no separator, which is what the
+  design settled on — spaces crept in during implementation and turned one stroke into four words.
+
+Running them together loses the level boundaries, so a string can parse more than one way, and any
+  string that does is by construction the concatenation of two different paths. A duplicate is
+  therefore the whole test, and a sequence that fails it is published by nobody rather than silently
+  won by whichever command sorted first.
+
+A sequence that is already a command name is withheld for the same reason: `runs` must reach `runs`,
+  not some deeper path that happens to run together the same way.
+
+Resolution tries the whole sequence before the per-token walk, and has to: `exgsr` also starts with
+  `ex`, so the walk alone would answer it with `example-pipeline` and drop the rest on the floor.
+  The walk still runs for everything else, which is what keeps the long form working.
+
+
 ## v0.7.1 (2026-08-07)
 
 ### Bug Fixes
