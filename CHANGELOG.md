@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.6.2 (2026-08-07)
+
+### Bug Fixes
+
+- Key the index by the typed sequence, not the node's prefix
+  ([`87fc0c4`](https://github.com/datapointchris/pyclisteno/commit/87fc0c4fd4deee1b2a67b89c2e345d70f685f103))
+
+A prefix is unique only among siblings, so the flat index handed the shell eleven colliding keys on
+  dectl alone — `r` alone named five different commands, and `l` three. Nothing could look anything
+  up in it, which is the one job the file has.
+
+Column one is now every ancestor's prefix followed by the node's own: what a user actually types,
+  and unique by construction. A node under an unassigned parent is dropped rather than given a
+  sequence nothing can reach.
+
+
 ## v0.6.1 (2026-08-07)
 
 ### Bug Fixes
