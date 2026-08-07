@@ -143,7 +143,16 @@ def write_atomically(path: Path, text: str) -> None:
     A torn read is a wrong suggestion rather than a crash, which is worse — it
     looks like the library disagreeing with itself. `replace` is atomic within a
     filesystem, and the scratch file is a sibling to keep it on the same one.
+
+    Unchanged content is not rewritten, which is what `attach` relies on instead
+    of a staleness check: the rendered text *is* the fingerprint, so there is
+    nothing to store, nothing to compare it against, and no way for the stored
+    one to disagree with the file it describes. It matters because the ledger is
+    synced — an identical rewrite still moves the mtime, and every invocation of
+    every tool would wake Syncthing for nothing.
     """
+    if path.exists() and path.read_text() == text:
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     scratch = path.with_name(f'{path.name}.new')
     scratch.write_text(text)

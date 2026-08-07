@@ -6,11 +6,14 @@ finished command tree; the decorators only record exceptions to what `attach`
 would otherwise compute.
 """
 
+from pyclisteno.attach import attach
 from pyclisteno.marks import no_shortcut
 from pyclisteno.marks import shortcut
 from pyclisteno.model import SCHEMA
 from pyclisteno.model import Model
 from pyclisteno.model import Node
+from pyclisteno.resolve import expand
+from pyclisteno.resolve import resolve
 from pyclisteno.walk import walk
 
-__all__ = ['SCHEMA', 'Model', 'Node', 'no_shortcut', 'shortcut', 'walk']
+__all__ = ['SCHEMA', 'Model', 'Node', 'attach', 'expand', 'no_shortcut', 'resolve', 'shortcut', 'walk']
