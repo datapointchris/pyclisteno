@@ -3,7 +3,7 @@
 A learned shortcut, hint, and completion layer for Python CLIs built on Click or Typer.
 
 Stenography compresses language by rule rather than by lookup table, which is why trained
-stenographers reach speed without memorising a second vocabulary. `clisteno` does the same thing
+stenographers reach speed without memorizing a second vocabulary. `clisteno` does the same thing
 to a command tree: each level contributes a prefix of its own name and they run together into one
 stroke, so `dectl saglsoru` is `dectl salesdata glue source-copy run` with less of it, not an
 alias that has to be learned separately.

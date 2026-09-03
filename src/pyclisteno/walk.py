@@ -167,7 +167,7 @@ def commands_by_path(app: object) -> dict[str, CommandLike]:
     """Every live command, keyed the way the model keys its nodes.
 
     A second traversal rather than a reference to each command hung off its node:
-    a Node is a serialisable record of the grammar, and putting a live object on
+    a Node is a serializable record of the grammar, and putting a live object on
     one makes the thing that gets written to disk own the thing that cannot be.
     Only teaching needs the commands themselves, and only while the process runs.
     """

@@ -42,7 +42,7 @@ def is_tag(body: str) -> bool:
     except Exception:
         # Any style rich cannot parse is not a tag rich would have rendered, so
         # it is text the tool meant to print. Broad because rich raises several
-        # unrelated error types for a bad colour, a bad word, and bad syntax.
+        # unrelated error types for a bad color, a bad word, and bad syntax.
         return False
     return True
 

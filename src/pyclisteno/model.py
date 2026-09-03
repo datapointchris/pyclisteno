@@ -1,4 +1,4 @@
-"""The exported grammar: the node schema, and the two files it serialises to.
+"""The exported grammar: the node schema, and the two files it serializes to.
 
 The schema is the artifact the language ports agree on rather than an internal
 detail of this one — the zsh suggestion strategy is written once and must read a
@@ -51,7 +51,7 @@ class Node:
 
     # In-process only, and deliberately not part of the schema: a `@shortcut`
     # pin is an *input* to assignment, and the dump records what assignment
-    # decided. `excluded` has to be serialised because a null prefix alone
+    # decided. `excluded` has to be serialized because a null prefix alone
     # cannot say whether a node was kept off the fast path or simply had no
     # valid prefix left; a pin needs no such witness, because the prefix it
     # produced is right there. Excluded from equality so a walked model still

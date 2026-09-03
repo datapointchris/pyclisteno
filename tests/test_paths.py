@@ -70,7 +70,7 @@ def test_model_and_index_are_distinct_files(monkeypatch, tmp_path):
 
 
 def test_ledger_is_not_written_into_the_cache(monkeypatch, tmp_path):
-    """Losing the ledger changes behaviour; losing the cache costs a recompute.
+    """Losing the ledger changes behavior; losing the cache costs a recompute.
 
     Sharing a directory would make a cache-clearing script silently reassign
     every prefix the user has already learned.
