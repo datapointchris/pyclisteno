@@ -3,14 +3,14 @@ name = "pyclisteno"
 version = "0.8.0"
 description = "Learned shortcut, hint, and completion layer for Python CLIs"
 authors = [{ name = "Chris Birch", email = "datapointchris@gmail.com" }]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 keywords = ["cli", "click", "typer", "completion", "shortcuts", "abbreviation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
