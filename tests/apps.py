@@ -1,7 +1,7 @@
 """Small apps built to order, for cases the shipped hostile fixture does not cover.
 
-The fixture is fixed on purpose — it is the shared spec the language ports test
-against — so anything that needs a tree of its own builds one here.
+The fixture is fixed on purpose — it is the spec an implementation in any
+language tests against — so anything that needs a tree of its own builds one here.
 """
 
 import typer

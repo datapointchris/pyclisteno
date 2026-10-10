@@ -1,13 +1,12 @@
 """The exported grammar: the node schema, and the two files it serializes to.
 
-The schema is the artifact the language ports agree on rather than an internal
-detail of this one — the zsh suggestion strategy is written once and must read a
-Go-produced dump and a Python-produced dump identically. Renaming a field here
-is a change to goclisteno and bashclisteno too, which is what `SCHEMA` exists to
-signal.
+The schema is a format rather than an internal detail of this library. It is
+written so an implementation in another language can produce the same files, and
+one shell reader can read what either one wrote. Renaming a field is a format
+change, which is what `SCHEMA` exists to signal.
 
-Two files rather than one because the shell reads the index on the keystroke
-path. A TSV goes straight into an assoc array; parsing JSON in zsh would cost a
+Two files rather than one because the index is for a shell to read on the
+keystroke path. A TSV goes straight into an assoc array; parsing JSON in zsh would cost a
 subprocess per keystroke, which is the rule .zshrc already states for the doshell
 widgets. The JSON is for everything not on that path — regeneration, assignment,
 help rendering.

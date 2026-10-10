@@ -35,10 +35,10 @@ def test_pins_live_in_the_tools_own_config_directory(monkeypatch, tmp_path):
 
 
 def test_pins_filename_is_language_independent():
-    """The shell reads these without knowing what the tool was written in.
+    """An implementation in another language reads the same pin file.
 
-    goclisteno and bashclisteno must produce this exact name, so a language
-    prefix here would break every port's ability to read the others' files.
+    A language prefix in the name would tie a user's pins to the language the
+    tool is written in, so a tool rewritten in another language would drop them.
     """
     assert paths.CONFIG_SUFFIX == 'clisteno-shortcuts.toml'
 

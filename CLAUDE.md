@@ -121,8 +121,8 @@ never truncated. Click and typer truncate their own, and nothing downstream reco
 
 - **`export` writes the model and the index from one walk.** Two walks either side of a tool
   upgrade would publish a prefix for a command the model does not hold.
-- **The index is TSV because the shell reads it on every keystroke**, and parsing JSON there costs a
-  subprocess. This repo writes the index. The shell code that reads it is not in the repo.
+- **The index is TSV so a shell can read it on every keystroke**, where parsing JSON costs a
+  subprocess. The library writes the index and ships no shell code that reads it.
 - **The index carries no markup and no metavars**, because both columns go onto a command line. A
   bracket is a rich tag only when rich's `Style.parse` accepts it, so `[RUN_ID]` and `[OPTIONS]`
   survive. The JSON model keeps the markup.

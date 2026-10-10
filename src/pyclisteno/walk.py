@@ -1,12 +1,10 @@
 """Command tree to grammar model.
 
-**The walk is structural, and imports neither click nor typer.** Typer used to
-build its tree out of click's own objects, which is why an `isinstance` check
-against `click.Command` once covered both. It no longer does: typer 0.27 vendors
-a complete copy of click at `typer._click`, whose `Command` derives from `ABC`
-and shares no base class with the installed click. Anything matching on class
-identity sees a typer tree as "not a command at all" and returns an empty model,
-which is a silent wrong answer rather than a crash.
+**The walk is structural, and imports neither click nor typer.** Typer vendors a
+complete copy of click at `typer._click`, whose `Command` derives from `ABC` and
+shares no base class with the installed click. So an `isinstance` check against
+`click.Command` sees a typer tree as "not a command at all" and returns an empty
+model, which is a silent wrong answer rather than a crash.
 
 What the two implementations do agree on is shape, exactly:
 
@@ -17,7 +15,7 @@ What the two implementations do agree on is shape, exactly:
   context its own `list_commands` expects
 
 That shape is the real interface, so it is what `CommandLike` states and what the
-ports implement against. Matching on it costs the library its last runtime
+walk matches on. Matching on it costs the library its last runtime
 dependency and survives the next time either project rearranges its classes.
 
 The walk reads and returns a value. It never mutates a command, which is what
@@ -135,7 +133,7 @@ def build_node(command: CommandLike, name: str, path: list[str], tool: str) -> N
         # siblings in order to decide who keeps a contested prefix. Click sorts
         # its commands and typer preserves declaration order, so an unsorted walk
         # would hand the same tree different shortcuts depending on which library
-        # built it — and goclisteno a third set again.
+        # built it.
         for child_name in sorted(command.list_commands(context)):  # type: ignore[attr-defined]
             child = command.get_command(context, child_name)  # type: ignore[attr-defined]
             # A hidden command is not part of the grammar anyone learns, and

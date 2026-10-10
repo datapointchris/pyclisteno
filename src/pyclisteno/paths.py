@@ -63,7 +63,7 @@ def model_path(tool: str) -> Path:
 def index_path(tool: str) -> Path:
     """Flat prefix index for the shell.
 
-    Separate from the model, and a different format, because the suggestion
-    strategy runs on the keystroke path where parsing JSON is not affordable.
+    Separate from the model, and a different format, because a shell reading it
+    on the keystroke path cannot afford to parse JSON.
     """
     return cache_home() / LIBRARY / f'{tool}.tsv'

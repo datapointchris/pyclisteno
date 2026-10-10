@@ -1,4 +1,4 @@
-"""A deliberately hostile CLI, shipped so every language port tests one grammar.
+"""A deliberately hostile CLI, shipped so an implementation in any language can test against it.
 
 dectl's own grammar is too clean to exercise the hard paths — one closed verb
 vocabulary and a single structural rule — and testing against it would turn every
@@ -15,9 +15,9 @@ would break, an assumption:
 - `debug-dump`, hidden, which must not consume a prefix its visible siblings want.
 
 It lives in the library rather than in `tests/` because the exported grammar is
-part of the shared spec: goclisteno and bashclisteno test against these cases
-instead of each inventing their own. Importing it needs typer, which the library
-itself never does.
+a format other implementations can share. An implementation in another language
+tests against these cases rather than inventing its own. Importing it needs
+typer, which the library itself never does.
 """
 
 from __future__ import annotations

@@ -41,7 +41,7 @@ def infer_tool(command: CommandLike) -> str:
     """What the user types, which is not always what the app calls itself.
 
     A typer app built without a name converts to a command with none, so the
-    fallback is the invoked script — the same string the shell integration sees.
+    fallback is the invoked script, which is the name the user typed.
     """
     return command.name or Path(sys.argv[0]).name
 

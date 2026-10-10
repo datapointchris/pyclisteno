@@ -1,6 +1,6 @@
 # pyclisteno
 
-A learned shortcut, hint, and completion layer for Python CLIs built on Click or Typer.
+A learned shortcut and hint layer for Python CLIs built on Click or Typer.
 
 Stenography compresses language by rule rather than by lookup table, which is why trained
 stenographers reach speed without memorizing a second vocabulary. `clisteno` does the same thing
@@ -10,13 +10,17 @@ alias that has to be learned separately.
 
 ## What it provides
 
-Three surfaces over one model, each independently opt-in:
+Two surfaces over one model, each independently opt-in:
 
 - **Teaching** — the short form and its description shown beside the long form in help output, so
   ordinary use trains the fast path.
-- **Prediction** — grammar-aware ghost text in the shell, driven by a cached index rather than by
-  history.
 - **Compression** — a resolver that expands a prefix sequence into the full command.
+
+`attach` also keeps a flat index in the cache, whichever surfaces are on. It holds one line per
+published sequence: the sequence, the full command and its summary, separated by tabs. The index is
+for a shell widget, such as a completion or a suggestion, to read on every keystroke. A shell reads
+a TSV with no subprocess, where parsing JSON would cost one per keystroke. The library ships no
+shell code that reads it.
 
 ## Attaching it
 
@@ -117,8 +121,10 @@ A pin that is unusable — not a prefix of the command's own name, or already sp
 dropped and the prefix computed as if it were absent. Nothing in that file can stop the CLI
 starting, including a syntax error in it.
 
-## Related
+## The files are written for other languages to share
 
-`goclisteno` and `bashclisteno` implement the same grammar schema and the same assignment
-algorithm for their ecosystems, in the way `goselfupdate` / `pyselfupdate` / `bashselfupdate`
-share one release contract.
+The model, the index, the ledger and the pin file carry nothing specific to Python. A library in
+another language could implement the same assignment and read and write the same files, so one
+shell widget would serve CLIs written in either. The model's `schema` field versions the node
+fields and the index columns. `pyclisteno.fixture` is a deliberately hostile command tree, shipped
+in the package, for such an implementation to test against. Importing it needs typer.
