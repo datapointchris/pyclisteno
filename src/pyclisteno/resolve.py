@@ -42,7 +42,11 @@ class Resolution:
 
 
 def retired_at(ledger: Ledger, parent_key: str) -> list[str]:
-    return [prefix for key, prefixes in ledger.retired.items() if parent_key_of(key) == parent_key for prefix in prefixes]
+    retired = []
+    for key, prefixes in ledger.retired.items():
+        if parent_key_of(key) == parent_key:
+            retired.extend(prefixes)
+    return retired
 
 
 def match_child(node: Node, token: str) -> Node | None:
