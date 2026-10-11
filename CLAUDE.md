@@ -163,7 +163,10 @@ managed come from a shared template. The next regeneration overwrites a hand edi
 ## A push to main releases to PyPI, and a published version is permanent
 
 A push to `main` runs `validate.yml`, then python-semantic-release cuts the version and tag from the
-commits. The `publish` job then builds from the tag and uploads to PyPI through Trusted Publishing.
+commits. The tag is the version: pyproject.toml declares it dynamic, and hatchling reads it through
+uv-dynamic-versioning. So the release writes no commit, and the tag sits on the merged commit. The
+`publish` job then builds from the tag and uploads to PyPI through Trusted Publishing. A build
+anywhere but the tag names the previous release plus a distance.
 It sits in `release.yml` because a tag pushed with `GITHUB_TOKEN` starts no other workflow, and the
 PyPI publisher names this workflow file and its `pypi` environment. A version on PyPI cannot be
 replaced, only yanked.
