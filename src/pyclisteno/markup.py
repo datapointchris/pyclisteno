@@ -1,9 +1,8 @@
 """Removing rich's tags from a summary, without removing brackets that mean something.
 
-The JSON model keeps the markup. The summary there is the tool's own help text,
-and a consumer that renders through rich wants it intact — cli-design.md settles
-that Python help *is* rich's, so a Python tool's help strings legitimately carry
-tags where a Go tool's never would.
+The JSON model keeps the markup. The summary there is the tool's own help text.
+A Python tool whose help renders through rich legitimately writes rich tags in
+it, and a consumer that renders through rich wants them intact.
 
 The TSV cannot keep it. That column goes onto the command line, where `[bold]`
 is four literal characters in a hint.

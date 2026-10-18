@@ -6,10 +6,9 @@ With it off, enrollment is byte-identical; with it on, that is the point.
 
 **It writes `short_help`, not the renderer.** The row a parent's help shows for
 each child comes from that string, so setting it is enough and no help formatter,
-template or rich style is touched. That matters beyond tidiness: cli-design.md
-settles that Python help is rich's with rich's defaults, and a library patching
-the renderer would make every tool adopting it the odd one, which is the exact
-objection that settled the rule.
+template or rich style is touched. That matters beyond tidiness. Tools built on
+the same stack read alike when each keeps its renderer's defaults. A library
+patching the renderer would make every tool adopting it the odd one out.
 
 **Where it writes depends on who built the tree, and getting this wrong is
 silent.** A click app's commands are the objects that run, so writing to them

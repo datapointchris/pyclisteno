@@ -107,7 +107,7 @@ def summarize(command: CommandLike) -> str:
 
 
 def format_argument(argument: ParameterLike) -> str:
-    """Angle brackets for required, square for optional — cli-design.md's help-row convention."""
+    """Angle brackets for required, square for optional: the convention help rows already use."""
     label = str(argument.name).replace('_', '-')
     if argument.nargs == -1:
         return f'<{label}>...'

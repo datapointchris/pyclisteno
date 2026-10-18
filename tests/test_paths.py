@@ -57,13 +57,6 @@ def test_state_and_cache_namespace_by_library_not_by_tool(monkeypatch, tmp_path)
     assert paths.index_path('dectl') == tmp_path / 'cache' / 'clisteno' / 'dectl.tsv'
 
 
-def test_every_tool_shares_one_state_directory(monkeypatch, tmp_path):
-    """One Syncthing folder covers the fleet, however many tools adopt the library."""
-    monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path))
-    parents = {paths.ledger_path(tool).parent for tool in ('dectl', 'forge', 'syncer')}
-    assert parents == {tmp_path / 'clisteno'}
-
-
 def test_model_and_index_are_distinct_files(monkeypatch, tmp_path):
     monkeypatch.setenv('XDG_CACHE_HOME', str(tmp_path))
     assert paths.model_path('dectl') != paths.index_path('dectl')

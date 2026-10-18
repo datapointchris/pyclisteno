@@ -25,8 +25,8 @@ def make_callback(name, pin=None, excluded=False):
 def app_with_markup():
     """Help text carrying rich tags, which is legitimate for a Python CLI.
 
-    cli-design.md settles that Python help is rich's, so a tool's own summaries
-    reach the dump with tags in them — dectl's alias rows are the live example.
+    A tool whose help renders through rich writes rich tags in its help strings,
+    so its own summaries reach the dump with tags in them.
     """
     app = typer.Typer(help='A [bold]marked up[/bold] app.')
     app.callback()(lambda: None)

@@ -17,7 +17,7 @@ def test_rich_styles_are_tags(body):
 
 @pytest.mark.parametrize('body', ['id', 'OPTIONS', 'RUN_ID', 'env', 'alias'])
 def test_the_things_a_help_row_puts_in_brackets_are_not_tags(body):
-    """cli-design.md uses `[id]` for an optional argument, which must survive."""
+    """A help row writes an optional argument as `[id]`, which must survive."""
     assert is_tag(body) is False
 
 

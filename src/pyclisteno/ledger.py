@@ -2,7 +2,7 @@
 
 State, not cache. Deleting this file silently changes what a typed sequence
 means, which is why it sits under XDG_STATE_HOME in a directory shared by every
-tool and synced across the fleet — a sequence learned on one machine has to mean
+tool and synced across machines — a sequence learned on one machine has to mean
 the same thing on the next.
 
 A node is keyed by its path joined with spaces, so `glue nightly run` names the
