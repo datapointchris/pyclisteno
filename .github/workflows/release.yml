@@ -44,9 +44,10 @@ jobs:
     permissions:
       # Trusted Publishing. No API token is stored in this repository; PyPI is
       # configured to accept a short-lived OIDC credential from this workflow.
-      # The publisher registration must name the `pypi` environment above --
-      # PyPI checks that claim, and a publisher registered without it fails
-      # with invalid-publisher even though everything else matches.
+      # The publisher registration names the `pypi` environment above. One
+      # registered without an environment accepts a credential from any
+      # environment in this workflow, and PyPI emails after each upload until
+      # it is constrained. The environment allows deployments from main only.
       id-token: write
     steps:
       - uses: actions/checkout@v7
