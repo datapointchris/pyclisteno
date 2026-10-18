@@ -1,10 +1,10 @@
 """Expanding a typed sequence back into the full command.
 
 The walk is longest match, one token at a time. A token matches a child when it
-starts with the child's prefix and is itself a prefix of the child's name. Typing the whole
-name works for the same reason the short form does — a name starts with its own
-prefix, and no other sibling's prefix can be a longer match without breaking the
-invariant assignment enforces.
+starts with the child's prefix and is itself a prefix of the child's name.
+Typing the whole name works for the same reason the short form does — a name
+starts with its own prefix, and no other sibling's prefix can be a longer match
+without breaking the invariant assignment enforces.
 
 **Retired sequences are dead ends, and resolution has to know about them.**
 Assignment stops a *new* prefix from capturing a retired string, but it cannot
@@ -15,12 +15,13 @@ someone is using today to protect one nobody can use at all — but to let the
 retired string win its own longest match and stop. Typing it reports that the
 command is gone, which is the whole point of never recycling.
 
-**The first token is tried as a whole sequence before the walk.** With `run`
-under `jobs`, `jru` reaches `jobs run` in one step. A first token that is a
-sequence ends resolution there, and every token after it is handed back as typed.
-So `j ru` reaches `jobs` and hands back `ru`: the prefixes of one sequence are
-typed together. The walk runs when the first token is not a sequence, as when it
-is a full name. `jobs ru nightly` reaches `jobs run` and hands back `nightly`.
+**The first token is tried as a whole sequence before the walk.** With `jobs`
+holding `j` and its `run` holding `ru`, `jru` reaches `jobs run` in one step. A
+first token that is a sequence ends resolution there, and every token after it
+is handed back as typed. So `j ru` reaches `jobs` and hands back `ru`: the
+prefixes of one sequence are typed together. The walk runs when the first token
+is not a sequence, as when it is a full name. `jobs ru nightly` reaches
+`jobs run` and hands back `nightly`.
 
 Tokens resolution cannot consume are handed back rather than swallowed.
 Everything after the last command is that command's arguments, which is what lets
