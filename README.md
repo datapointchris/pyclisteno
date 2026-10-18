@@ -220,10 +220,15 @@ Its keys are node paths joined with spaces. Its values are that node's prefix at
 never the run-together sequence. The ledger is keyed the same way.
 
 **Precedence is the pin file, then `@shortcut`, then the ledger, then the computed prefix.** A pin
-in either place outranks the ledger. It is the one input that moves a handed-out prefix. An
-unusable pin falls through to the next source. A pin is unusable when it is not a prefix of its
-command's name, or when the prefix is already spoken for. Nothing in the pin file can stop the CLI
-starting, a syntax error included.
+in either place outranks its own command's ledger entry. It is the one input that moves a
+handed-out prefix, and it moves only its own command's. An unusable pin falls through to the next
+source. A pin is unusable when any of these holds:
+
+- it is not a prefix of its command's name
+- another command at that level holds the prefix, or retired it
+- it would make typing a sibling's name reach the pinned command
+
+Nothing in the pin file can stop the CLI starting, a syntax error included.
 
 ## Where it writes — the ledger is state to sync, and the model and the index are cache
 

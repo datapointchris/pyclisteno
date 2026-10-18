@@ -42,6 +42,13 @@ there. See the module docstring in resolve.py.
 **Precedence**: a pin in the user's config, then `@shortcut` in the source, then
 the ledger's grandfather, then the computed minimum. A lock that is not valid
 where it lands falls through to the next source rather than displacing anything.
+
+**Every prefix the ledger records at a level is reserved for its own path**,
+whether that path holds it or retired it. So a pin moves only its own command. A
+pin naming a prefix a sibling holds is not valid, and falls through like any
+other lock. The reservation also covers a command removed in the same run that a
+sibling arrives. Its prefix is retired when the run ends, and nothing may take it
+first.
 """
 
 from __future__ import annotations
@@ -114,17 +121,30 @@ def choose_prefix(name: str, sibling_names: list[str], claims: list[Claim]) -> s
     return None
 
 
-def locks_for(node: Node, key: str, pins: dict[str, str], ledger: Ledger) -> list[str]:
+def strands_a_sibling(pin: str, name: str, sibling_names: list[str]) -> bool:
+    """Whether a pin would leave a sibling no prefix, so that typing its name reaches this node.
+
+    A sibling whose name starts with the pin and is itself a prefix of this name
+    can only take a prefix that is also a prefix of this name, and the invariant
+    caps every such prefix at the pin's length. With `runs` pinned to `ru`, `run`
+    has nothing left, and typing `run` reaches `runs`. `is_valid` catches this
+    for a sibling already assigned. A pin is checked before the free siblings are
+    assigned, so it needs this check for the rest.
+    """
+    return any(other != name and other.startswith(pin) and name.startswith(other) for other in sibling_names)
+
+
+def locks_for(node: Node, key: str, pins: dict[str, str], ledger: Ledger, sibling_names: list[str]) -> list[str]:
     """Candidate prefixes in precedence order, highest first.
 
     The ledger's own retired entry for this key is a candidate too — reissuing a
-    prefix to the command that used to hold it is the opposite of recycling, and
-    it is what makes a command that leaves and comes back keep its sequence.
+    prefix to the command that held it is the opposite of recycling, and it is
+    what makes a command that leaves and comes back keep its sequence.
     """
-    candidates = []
-    for source in (pins.get(key), node.pin, ledger.assignments.get(key)):
-        if source is not None:
-            candidates.append(source)
+    candidates = [pin for pin in (pins.get(key), node.pin) if pin is not None and not strands_a_sibling(pin, node.name, sibling_names)]
+    held = ledger.assignments.get(key)
+    if held is not None:
+        candidates.append(held)
     candidates.extend(reversed(ledger.retired.get(key, [])))
     return candidates
 
@@ -132,35 +152,44 @@ def locks_for(node: Node, key: str, pins: dict[str, str], ledger: Ledger) -> lis
 def assign_siblings(children: list[Node], parent_key: str, pins: dict[str, str], ledger: Ledger) -> dict[str, str]:
     """Assign one sibling set, writing each node's prefix and returning the new entries."""
     assigned: dict[str, str] = {}
+    present = {key_of(node.path) for node in children}
     retired_claims = [
         Claim(key=key, name=name_of(key), prefix=prefix, live=False)
         for key, prefixes in ledger.retired.items()
         if parent_key_of(key) == parent_key
         for prefix in prefixes
     ]
+    # A sibling still in the tree keeps its whole territory, so a node checked
+    # before it cannot take a prefix that captures its name. A path gone from the
+    # tree keeps only its string, as a retired one does.
+    held_claims = [
+        Claim(key=key, name=name_of(key), prefix=prefix, live=key in present)
+        for key, prefix in ledger.assignments.items()
+        if parent_key_of(key) == parent_key
+    ]
     live_claims: list[Claim] = []
 
     def claims_against(key: str) -> list[Claim]:
-        # A node is never blocked by its own history — that is what lets it
-        # reclaim a prefix it previously held.
-        return [claim for claim in retired_claims if claim.key != key] + live_claims
+        # A node is never blocked by its own ledger entries. That is what lets
+        # it reclaim a retired prefix of its own, and lets its pin move it.
+        return [claim for claim in retired_claims + held_claims if claim.key != key] + live_claims
 
     def accept(node: Node, key: str, prefix: str) -> None:
         node.prefix = prefix
         assigned[key] = prefix
         live_claims.append(Claim(key=key, name=node.name, prefix=prefix, live=True))
 
+    sibling_names = [node.name for node in children]
     unlocked = []
     for node in children:
         key = key_of(node.path)
-        for candidate in locks_for(node, key, pins, ledger):
+        for candidate in locks_for(node, key, pins, ledger, sibling_names):
             if is_valid(candidate, node.name, claims_against(key)):
                 accept(node, key, candidate)
                 break
         else:
             unlocked.append(node)
 
-    sibling_names = [node.name for node in children]
     for node in sorted(unlocked, key=lambda node: node.name):
         key = key_of(node.path)
         chosen = choose_prefix(node.name, sibling_names, claims_against(key))

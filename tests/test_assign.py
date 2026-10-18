@@ -75,12 +75,15 @@ def test_a_removed_commands_prefix_is_retired_rather_than_dropped():
     assert shrunk.retired == {'runs': ['runs']}
 
 
-def test_a_retired_prefix_is_never_handed_to_another_command():
-    """The worst failure available here is a sequence that still works and now does something else."""
-    _, ledger = assign_app(app_with('run', 'runs'))
-    _, shrunk = assign_app(app_with('run'), ledger=ledger)
+def test_a_removed_commands_prefix_is_never_handed_to_another_command():
+    """A recycled sequence still runs, and runs something else.
 
-    model, _ = assign_app(app_with('run', 'runsagain'), ledger=shrunk)
+    `runs` leaves in the same run that `runsagain` arrives, so its prefix is
+    still a ledger assignment rather than a retired one when `runsagain` asks.
+    """
+    _, ledger = assign_app(app_with('run', 'runs'))
+
+    model, _ = assign_app(app_with('run', 'runsagain'), ledger=ledger)
 
     assert prefixes(model)['runsagain'] == 'runsa'
 
@@ -166,14 +169,14 @@ def test_a_pin_that_collides_falls_through_to_the_next_source():
     assert assigned['run'] == 'ru'
 
 
-def test_a_pin_beats_an_incumbents_grandfathered_prefix():
-    _, ledger = assign_app(app_with('review'))
-    assert ledger.assignments == {'review': 'r'}
+def test_a_pin_moves_its_own_commands_prefix_and_never_a_siblings():
+    _, ledger = assign_app(app_with('run', 'status'))
+    assert ledger.assignments == {'run': 'r', 'status': 's'}
 
-    model, repinned = assign_app(app_with('review'), ledger=ledger, pins={'review': 'rev'})
+    model, repinned = assign_app(app_with('review', 'run', 'status'), ledger=ledger, pins={'review': 'r', 'status': 'st'})
 
-    assert prefixes(model) == {'review': 'rev'}
-    assert repinned.retired == {'review': ['r']}
+    assert prefixes(model) == {'review': 're', 'run': 'r', 'status': 'st'}
+    assert repinned.retired == {'status': ['s']}
 
 
 def test_a_command_with_no_prefix_left_gets_none_rather_than_breaking_the_cli():
@@ -207,20 +210,31 @@ def test_the_hostile_fixture_assigns_as_designed():
     }
 
 
-@pytest.mark.parametrize('names', [('run', 'runs'), ('review', 'restart', 'run'), ('a', 'ab', 'abc'), ('x',)])
-def test_no_assignment_ever_lets_one_sibling_capture_another(names):
+@pytest.mark.parametrize(
+    ('names', 'pins'),
+    [
+        (('run', 'runs'), {}),
+        (('review', 'restart', 'run'), {}),
+        (('a', 'ab', 'abc'), {}),
+        (('x',), {}),
+        (('run', 'runs'), {'runs': 'ru'}),
+    ],
+)
+def test_no_assignment_ever_lets_one_sibling_capture_another(names, pins):
     """The invariant, checked directly: typing any prefix of a name must reach that name.
 
     A sweep rather than a case, because the rule is easy to satisfy by accident
     on the examples that motivated it and hard to satisfy on the ones that did not.
+    A pin is checked before the free siblings are assigned, so it gets a case too.
     """
-    model, _ = assign_app(app_with(*names))
+    model, _ = assign_app(app_with(*names), pins=pins)
     assigned = {node.name: node.prefix for node in model.root.children}
     for name, prefix in assigned.items():
-        for length in range(len(prefix), len(name) + 1):
+        for length in range(len(prefix or name), len(name) + 1):
             typed = name[:length]
             winner = max(
-                (other for other, other_prefix in assigned.items() if typed.startswith(other_prefix)),
+                (other for other, other_prefix in assigned.items() if other_prefix and typed.startswith(other_prefix)),
                 key=lambda other: len(assigned[other]),
+                default=name,
             )
             assert winner == name, f'typing {typed!r} reaches {winner!r}, not {name!r}'

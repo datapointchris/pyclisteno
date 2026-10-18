@@ -67,6 +67,13 @@ something else.
   that is not valid where it lands falls through to the next source. Locks are taken across a whole
   sibling set before any free node, so an incumbent never loses its prefix to a newcomer that sorts
   earlier.
+- **Every prefix the ledger records at a level is reserved for its own path, held or retired.** A
+  pin moves only its own command, and one naming a sibling's prefix falls through. A command removed
+  in the same run that a sibling arrives keeps its string, because its prefix is still an assignment
+  rather than a retirement while the run assigns. `claims_against` is where both apply.
+- **A pin is checked before the free siblings are assigned**, so `is_valid` cannot see their
+  claims. `strands_a_sibling` refuses a pin that would leave one with no prefix: `runs` pinned to
+  `ru` beside a free `run` would make typing `run` reach `runs`.
 - **One rule makes longest-match correct.** For any two live siblings A and B, if prefix(A) is a
   prefix of name(B), prefix(A) is at most as long as prefix(B). `is_valid` is that rule plus the
   reserved strings. `test_no_assignment_ever_lets_one_sibling_capture_another` sweeps it: every
