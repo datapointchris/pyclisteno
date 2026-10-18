@@ -6,6 +6,7 @@ from apps import make_callback
 from pyclisteno.assign import assign
 from pyclisteno.fixture import build_fixture_app
 from pyclisteno.ledger import Ledger
+from pyclisteno.resolve import resolve
 from pyclisteno.walk import walk
 
 
@@ -211,30 +212,31 @@ def test_the_hostile_fixture_assigns_as_designed():
 
 
 @pytest.mark.parametrize(
-    ('names', 'pins'),
+    ('earlier', 'names', 'pins'),
     [
-        (('run', 'runs'), {}),
-        (('review', 'restart', 'run'), {}),
-        (('a', 'ab', 'abc'), {}),
-        (('x',), {}),
-        (('run', 'runs'), {'runs': 'ru'}),
+        ((), ('run', 'runs'), {}),
+        ((), ('review', 'restart', 'run'), {}),
+        ((), ('a', 'ab', 'abc'), {}),
+        ((), ('x',), {}),
+        ((), ('run', 'runs'), {'runs': 'ru'}),
+        (('review', 'runs'), ('review', 'runs', 'run'), {}),
     ],
 )
-def test_no_assignment_ever_lets_one_sibling_capture_another(names, pins):
-    """The invariant, checked directly: typing any prefix of a name must reach that name.
+def test_no_assignment_ever_lets_one_sibling_capture_another(earlier, names, pins):
+    """The invariant, checked through resolution: typing a name, or any prefix of it down to its own prefix, reaches that name.
 
+    A sibling's full name is the one exception, since typing it reaches that sibling.
     A sweep rather than a case, because the rule is easy to satisfy by accident
     on the examples that motivated it and hard to satisfy on the ones that did not.
     A pin is checked before the free siblings are assigned, so it gets a case too.
+    So does an incumbent: `runs` keeps `ru` when `run` arrives, and `run` gets no
+    prefix, so only its full name can reach it.
     """
-    model, _ = assign_app(app_with(*names), pins=pins)
-    assigned = {node.name: node.prefix for node in model.root.children}
-    for name, prefix in assigned.items():
-        for length in range(len(prefix or name), len(name) + 1):
-            typed = name[:length]
-            winner = max(
-                (other for other, other_prefix in assigned.items() if other_prefix and typed.startswith(other_prefix)),
-                key=lambda other: len(assigned[other]),
-                default=name,
-            )
-            assert winner == name, f'typing {typed!r} reaches {winner!r}, not {name!r}'
+    ledger = assign_app(app_with(*earlier))[1] if earlier else None
+    model, saved = assign_app(app_with(*names), ledger=ledger, pins=pins)
+    children = model.root.children
+    for node in children:
+        typed_forms = {node.name[:length] for length in range(len(node.prefix or node.name), len(node.name) + 1)}
+        for typed in typed_forms - {other.name for other in children if other is not node}:
+            reached = resolve(model, [typed], saved).node
+            assert reached is node, f'typing {typed!r} reaches {reached.name!r}, not {node.name!r}'

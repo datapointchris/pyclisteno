@@ -1,10 +1,9 @@
 """Expanding a typed sequence back into the full command.
 
-The walk is longest match, one token at a time. A token matches a child when it
-starts with the child's prefix and is itself a prefix of the child's name.
-Typing the whole name works for the same reason the short form does — a name
-starts with its own prefix, and no other sibling's prefix can be a longer match
-without breaking the invariant assignment enforces.
+The walk goes one token at a time. A token equal to a child's full name reaches
+that child before any prefix is tried, so a real command name always reaches its
+command. Otherwise the longest match wins: a token matches a child when it starts
+with the child's prefix and is itself a prefix of the child's name.
 
 **Retired sequences are dead ends, and resolution has to know about them.**
 Assignment stops a *new* prefix from capturing a retired string, but it cannot
@@ -58,6 +57,18 @@ def retired_at(ledger: Ledger, parent_key: str) -> list[str]:
     return retired
 
 
+def named_child(node: Node, token: str) -> Node | None:
+    """The child whose full name is the token, prefix or none.
+
+    Tried before any prefix, because a real command name has to reach that
+    command. An incumbent keeps its prefix when a sibling arrives, so with `runs`
+    holding `ru`, a `run` added later gets no prefix. `run` starts with `ru`, so
+    prefix matching alone would answer `run` with `runs`. argparse resolves an
+    abbreviated option in the same order: exact match first, then prefix.
+    """
+    return next((child for child in node.children if child.name == token), None)
+
+
 def match_child(node: Node, token: str) -> Node | None:
     """Both bounds are needed. `update --help` passed as one argument starts with `update`'s prefix and is not `update`."""
     longest = None
@@ -86,7 +97,8 @@ def resolve(model: Model, tokens: list[str], ledger: Ledger | None = None) -> Re
     with `example-pipeline` and drop the rest on the floor.
 
     The walk still runs for everything else, and it is what makes the long form
-    work — a name starts with its own prefix. A sequence that matches nothing
+    work: a token equal to a child's full name reaches that child before any
+    prefix is tried. A sequence that matches nothing
     resolves to the root with everything left over, which is the caller's signal
     that it expanded no further. Passing no ledger resolves against live prefixes
     alone, correct for a tool that has never retired anything.
@@ -97,6 +109,10 @@ def resolve(model: Model, tokens: list[str], ledger: Ledger | None = None) -> Re
             return Resolution(node=whole, remainder=tokens[1:])
     node = model.root
     for index, token in enumerate(tokens):
+        named = named_child(node, token)
+        if named is not None:
+            node = named
+            continue
         child = match_child(node, token)
         retired = match_retired(retired_at(ledger, key_of(node.path)), token) if ledger else None
         if retired is not None and (child is None or len(retired) > len(str(child.prefix))):
@@ -129,9 +145,9 @@ def expand_argv(model: Model, ledger: Ledger | None = None, argv: list[str] | No
     - A leading option stops the walk at the first token, so `--env prod` and
       anything like it passes through untouched rather than being reinterpreted.
 
-    A real command name expands to itself, since a name starts with its own
-    prefix and no sibling's prefix can outmatch it — that is the invariant
-    assignment maintains, and it is what keeps this from shadowing anything.
+    A real command name expands to itself, because resolution tries a child's
+    full name before any prefix. That holds for a command assignment left
+    without a prefix, and it is what keeps this from shadowing anything.
     """
     argv = sys.argv if argv is None else argv
     tokens = argv[1:]

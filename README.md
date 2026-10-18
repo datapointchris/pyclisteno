@@ -182,9 +182,13 @@ is not certain. Each of these passes through untouched, for the CLI to answer it
 - a retired sequence
 - a command line that starts with an option, such as `tool --env prod jru`
 
-A token matches a command only between the command's prefix and its full name. A real command name
-therefore expands to itself. `"update --help"` passed as one argument starts with `update`'s prefix
-and still does not run `update`.
+A real command name expands to itself. A token equal to a command's full name reaches that command
+before any prefix is tried. That holds for a command with no prefix, such as a `run` added after
+`runs` took `ru`. Exact match before prefix is the order argparse uses for abbreviated options.
+
+Otherwise a token matches a command only between the command's prefix and its full name.
+`"update --help"` passed as one argument starts with `update`'s prefix and still does not run
+`update`.
 
 ## `@shortcut`, `@no_shortcut` and the pin file — exceptions to assignment, never the default
 
