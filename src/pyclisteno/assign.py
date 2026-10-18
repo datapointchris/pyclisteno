@@ -5,7 +5,8 @@ long form with less of it typed and there is no second vocabulary to learn. One
 prefix per level; a sequence is the concatenation.
 
 **The invariant.** Resolution takes the typed token and picks the longest
-assigned prefix that the token starts with. For that to be correct, everything a
+assigned prefix that the token starts with, among the siblings whose name the
+token is a prefix of. For that to be correct, everything a
 user might type on the way from a node's prefix to its full name has to land on
 that node, which reduces to one rule over any two live siblings A and B:
 

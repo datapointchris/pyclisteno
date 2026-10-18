@@ -107,6 +107,10 @@ run something other than what was typed. An unknown token, a retired sequence an
 all pass through untouched, for the CLI to answer itself. Expanding to the node reached before a
 retired string would run an ancestor of a removed command.
 
+A token matches a command only between its prefix and its full name. Starting with the prefix is
+not enough: `"update --help"` passed as one argument starts with `update`'s prefix, and running
+`update` for it turns a malformed argument into a write.
+
 argv is rewritten only when the basename of `argv[0]` is the tool. Enrollment runs at import, so
 pytest collecting a module that calls `attach` would otherwise have its own arguments rewritten.
 

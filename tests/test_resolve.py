@@ -121,10 +121,12 @@ def test_a_real_command_name_expands_to_itself(hostile):
     assert argv == ['hostile', 'glue', 'nightly', 'run']
 
 
-def test_an_unknown_sequence_is_left_for_the_cli_to_reject(hostile):
-    argv = ['hostile', 'zzz', 'and-more']
+@pytest.mark.parametrize('typed', [['zzz', 'and-more'], ['run --help'], ['runsx']])
+def test_an_unknown_sequence_is_left_for_the_cli_to_reject(hostile, typed):
+    """A token that starts with a prefix and runs past the name is not that command."""
+    argv = ['hostile', *typed]
     assert expand_argv(hostile, None, argv) is False
-    assert argv == ['hostile', 'zzz', 'and-more']
+    assert argv == ['hostile', *typed]
 
 
 def test_a_leading_option_passes_through_untouched(hostile):

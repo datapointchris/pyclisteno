@@ -1,9 +1,10 @@
 """Expanding a typed sequence back into the full command.
 
-Longest match, one token at a time. Typing the whole name works for the same
-reason the short form does — a name starts with its own prefix, and no other
-sibling's prefix can be a longer match without breaking the invariant assignment
-enforces.
+Longest match, one token at a time. A token matches a child when it starts with
+the child's prefix and is itself a prefix of the child's name. Typing the whole
+name works for the same reason the short form does — a name starts with its own
+prefix, and no other sibling's prefix can be a longer match without breaking the
+invariant assignment enforces.
 
 **Retired sequences are dead ends, and resolution has to know about them.**
 Assignment stops a *new* prefix from capturing a retired string, but it cannot
@@ -50,9 +51,10 @@ def retired_at(ledger: Ledger, parent_key: str) -> list[str]:
 
 
 def match_child(node: Node, token: str) -> Node | None:
+    """Both bounds are needed. `update --help` passed as one argument starts with `update`'s prefix and is not `update`."""
     longest = None
     for child in node.children:
-        if child.prefix is None or not token.startswith(child.prefix):
+        if child.prefix is None or not token.startswith(child.prefix) or not child.name.startswith(token):
             continue
         if longest is None or len(child.prefix) > len(str(longest.prefix)):
             longest = child
@@ -110,7 +112,9 @@ def expand_argv(model: Model, ledger: Ledger | None = None, argv: list[str] | No
     CLI run a command its user did not type:
 
     - A sequence that reaches nothing is left alone, so an unknown token produces
-      the CLI's own error rather than a truncated command.
+      the CLI's own error rather than a truncated command. A token that runs past
+      a command's name reaches nothing, so `"update --help"` quoted into one
+      argument is not run as `update`.
     - A retired sequence is left alone for the same reason. Expanding to the node
       reached *before* it would run an ancestor of a command that no longer
       exists, which is the silent wrong answer retirement exists to prevent.
