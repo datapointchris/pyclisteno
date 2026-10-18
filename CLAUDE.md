@@ -146,9 +146,10 @@ never truncated. Click and typer truncate their own, and nothing downstream reco
   mtime would wake the sync on every invocation. `test_a_second_attach_leaves_every_file_untouched`
   holds it.
 - **State and cache are namespaced by library, the pin file by tool.** The pin file sits beside the
-  tool's own config, where a user looks. `$XDG_STATE_HOME/<tool>/` can hold another library's
-  per-machine state that must never sync, so the synced ledger lives under `clisteno/` instead.
-  `test_paths.py` pins that asymmetry.
+  tool's own config, where a user looks. `$XDG_STATE_HOME/<tool>/` belongs to the tool, and other
+  libraries write there too, so whether it is synced is the tool's decision. The ledger has to be
+  synced, so it lives under `clisteno/` instead, where one synced folder covers every adopting
+  tool. `test_paths.py` pins that asymmetry.
 - **The names and fields are written for implementations in other languages to share.** They are
   the node fields and index columns, which `SCHEMA` versions, plus the ledger keying, the
   `clisteno` directory and the pin filename. The pin filename carries no language prefix for that

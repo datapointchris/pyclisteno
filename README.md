@@ -249,9 +249,9 @@ Deleting the ledger changes what typed sequences mean. Every prefix is computed 
 grandfathered one is lost.
 
 The pin file is namespaced by tool, because that is where a user looks for a tool's settings. State
-and cache are namespaced by library. `$XDG_STATE_HOME/<tool>/` can hold another library's
-per-machine state that must never be synced. The ledger lives under `clisteno/` so that syncing it
-syncs nothing else.
+and cache are namespaced by library. `$XDG_STATE_HOME/<tool>/` belongs to the tool, and other
+libraries write there too. Whether it is synced is the tool's decision. The ledger has to be synced,
+so it lives under `clisteno/`. One synced folder then covers every tool that adopts the library.
 
 A write whose content is unchanged is skipped. An identical rewrite would still move the mtime. A
 file-sync tool would then wake on every run. Each write goes to a scratch file beside the target,

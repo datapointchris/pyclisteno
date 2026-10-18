@@ -46,8 +46,10 @@ def test_pins_filename_is_language_independent():
 def test_state_and_cache_namespace_by_library_not_by_tool(monkeypatch, tmp_path):
     """The inversion versus pins_path is deliberate — see the module docstring.
 
-    Nesting these under the tool would put the ledger in the same directory as
-    pyselfupdate's autoupdate.json, which is machine-local and must not sync.
+    Nesting these under the tool would put the ledger in a directory the tool
+    owns, beside whatever else writes there, such as pyselfupdate's
+    `autoupdate-<machine>.json`. Whether the ledger synced would then be the
+    tool's decision rather than the library's.
     """
     monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path / 'state'))
     monkeypatch.setenv('XDG_CACHE_HOME', str(tmp_path / 'cache'))

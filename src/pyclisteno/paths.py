@@ -10,12 +10,13 @@ inside it — nothing here is ever merged into a file the tool parses, so a tool
 never has to know this library exists and dropping the library leaves no orphan
 keys behind.
 
-State and cache invert it because `~/.local/state/<tool>/` is not ours. Tools
-using pyselfupdate keep `autoupdate.json` there, recording the version installed
-on *this* machine, which must never be replicated. The ledger must be, or the
-same typed sequence resolves differently on different machines. One shared
-directory keeps those two requirements from colliding and means adopting the
-library costs no new synced folder.
+State and cache invert it because `~/.local/state/<tool>/` is not ours. It
+belongs to the tool, and other libraries write there too: pyselfupdate keeps
+`autoupdate-<machine>.json` in it. Whether that directory is synced is the
+tool's decision. The ledger has to be synced, or the same typed sequence
+resolves differently on different machines. A directory of the library's own
+lets the ledger sync without deciding anything for the tool. Every adopting
+tool's ledger lands in it, so adopting the library costs no new synced folder.
 """
 
 from __future__ import annotations
