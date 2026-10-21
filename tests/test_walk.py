@@ -36,7 +36,7 @@ def test_the_model_carries_the_tool_and_its_version(model):
 
 
 def test_a_runtime_built_subtree_is_walked_like_any_other():
-    """The jobs arrive from a dict, mirroring how dectl's aliases arrive from config.
+    """The jobs arrive from a dict, the way a tool's aliases arrive from config.
 
     This is the case decorators cannot reach, and the reason enrollment is one
     call after the tree is built rather than a decorator per command.

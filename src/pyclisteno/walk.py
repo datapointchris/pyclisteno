@@ -15,8 +15,8 @@ What the two implementations do agree on is shape, exactly:
   context its own `list_commands` expects
 
 That shape is the real interface, so it is what `CommandLike` states and what the
-walk matches on. Matching on it costs the library its last runtime
-dependency and survives the next time either project rearranges its classes.
+walk matches on. Matching on it leaves the library with no runtime dependency,
+and survives the next time either project rearranges its classes.
 
 The walk reads and returns a value. It never mutates a command, which is what
 makes the non-invasiveness property testable rather than hoped for.

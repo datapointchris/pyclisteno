@@ -182,10 +182,9 @@ A push to `main` runs `validate.yml`, then python-semantic-release cuts the vers
 commits. The tag is the version: pyproject.toml declares it dynamic, and hatchling reads it through
 uv-dynamic-versioning. So the release writes no commit, and the tag sits on the merged commit. The
 `publish` job then builds from the tag and uploads to PyPI through Trusted Publishing. A build
-anywhere but the tag names the previous release plus a distance.
-It sits in `release.yml` because a tag pushed with `GITHUB_TOKEN` starts no other workflow, and the
-PyPI publisher names this workflow file and its `pypi` environment. A version on PyPI cannot be
-replaced, only yanked.
+anywhere but the tag names the previous release plus a distance. `publish` sits in `release.yml`
+because a tag pushed with `GITHUB_TOKEN` starts no other workflow, and the PyPI publisher names
+this workflow file and its `pypi` environment. A version on PyPI cannot be replaced, only yanked.
 
 On 0.x a breaking change cuts a minor, through `major_on_zero = false`. Removing that key is how the
 project reaches 1.0. Release notes go in the GitHub release body, and there is no changelog file.

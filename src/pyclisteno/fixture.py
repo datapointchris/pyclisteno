@@ -1,23 +1,22 @@
 """A deliberately hostile CLI, shipped so an implementation in any language can test against it.
 
-dectl's own grammar is too clean to exercise the hard paths — one closed verb
-vocabulary and a single structural rule — and testing against it would turn every
-dectl command change into a test change. Everything here is a case that broke, or
-would break, an assumption:
+A real tool's grammar is usually too clean to exercise the hard paths — one
+closed verb vocabulary and a single structural rule — and testing against one
+would turn every change to that tool into a test change. Everything here is a
+case that broke, or would break, an assumption:
 
 - `run` / `runs` / `review`, a three-way first-letter collision where one name is
   a strict prefix of another. `run` can never be a unique prefix of itself.
 - `glue`, a namespace that also takes an argument.
-- The per-job subtree, built at runtime from a dict the way dectl's job aliases
+- The per-job subtree, built at runtime from a dict the way a tool's aliases
   arrive from config — the case decorators cannot reach.
 - `source-copy`, hyphenated.
 - `destroy`, marked `@no_shortcut`.
 - `debug-dump`, hidden, which must not consume a prefix its visible siblings want.
 
-It lives in the library rather than in `tests/` because the exported grammar is
-a format other implementations can share. An implementation in another language
-tests against these cases rather than inventing its own. Importing it needs
-typer, which the library itself never does.
+It lives in the library rather than in `tests/` so an implementation in another
+language tests against these cases rather than inventing its own. Importing it
+needs typer, which the library itself never does.
 """
 
 from __future__ import annotations
