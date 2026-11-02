@@ -110,8 +110,8 @@ at `jre`. The same three commands assigned from an empty ledger give `review` th
 
 **A removed command's prefix is retired, never recycled.** No other command is issued it. No prefix
 assigned afterwards may be short enough to swallow it. Typing it passes through to the CLI's own
-error. A recycled sequence would still run, and run something else, which is the worst failure
-available here. The command that held a retired prefix takes it back if it returns.
+error. A recycled sequence would still run, and run another command with no error to say so. The
+command that held a retired prefix takes it back if it returns.
 
 ## `attach` — one call after the tree is built, and one deletion to drop it
 

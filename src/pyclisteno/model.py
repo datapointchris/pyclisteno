@@ -5,11 +5,10 @@ written so an implementation in another language can produce the same files, and
 one shell reader can read what either one wrote. Renaming a field is a format
 change, which is what `SCHEMA` exists to signal.
 
-Two files rather than one because the index is for a shell to read on the
-keystroke path. A TSV goes straight into an associative array. Parsing JSON in zsh
-would cost a subprocess per keystroke. A shell widget defined in the shell's
-startup file runs on every keystroke, so it cannot afford one. The JSON is for
-everything not on that path — regeneration, assignment, help rendering.
+Two files rather than one because the index is for a shell widget to read on
+every keystroke. A TSV goes straight into an associative array, where parsing
+JSON in zsh would cost a subprocess per keystroke. The JSON is for everything
+not on that path — regeneration, assignment, help rendering.
 """
 
 from __future__ import annotations

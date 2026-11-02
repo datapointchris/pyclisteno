@@ -58,7 +58,7 @@ def retired_at(ledger: Ledger, parent_key: str) -> list[str]:
 
 
 def named_child(node: Node, token: str) -> Node | None:
-    """The child whose full name is the token, prefix or none.
+    """The child whose full name is the token, whether or not it holds a prefix.
 
     Tried before any prefix, because a real command name has to reach that
     command. An incumbent keeps its prefix when a sibling arrives, so with `runs`
@@ -70,7 +70,11 @@ def named_child(node: Node, token: str) -> Node | None:
 
 
 def match_child(node: Node, token: str) -> Node | None:
-    """Both bounds are needed. `update --help` passed as one argument starts with `update`'s prefix and is not `update`."""
+    """A token matches between a child's prefix and its full name.
+
+    `update --help` passed as one argument starts with `update`'s prefix and is
+    not `update`.
+    """
     longest = None
     for child in node.children:
         if child.prefix is None or not token.startswith(child.prefix) or not child.name.startswith(token):
@@ -98,10 +102,10 @@ def resolve(model: Model, tokens: list[str], ledger: Ledger | None = None) -> Re
 
     The walk still runs for everything else, and it is what makes the long form
     work: a token equal to a child's full name reaches that child before any
-    prefix is tried. A sequence that matches nothing
-    resolves to the root with everything left over, which is the caller's signal
-    that it expanded no further. Passing no ledger resolves against live prefixes
-    alone, correct for a tool that has never retired anything.
+    prefix is tried. A sequence that matches nothing resolves to the root with
+    everything left over, which is the caller's signal that it expanded no
+    further. Passing no ledger resolves against live prefixes alone, correct for
+    a tool that has never retired anything.
     """
     if tokens:
         whole = sequence_index(model).get(tokens[0])

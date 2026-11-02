@@ -11,9 +11,9 @@ never has to know this library exists and dropping the library leaves no orphan
 keys behind.
 
 State and cache invert it because `~/.local/state/<tool>/` is not ours. It
-belongs to the tool, and other libraries write there too: pyselfupdate keeps
-`autoupdate-<machine>.json` in it. Whether that directory is synced is the
-tool's decision. The ledger has to be synced, or the same typed sequence
+belongs to the tool, and other libraries write there too, such as a self-updater
+recording when this machine last checked. Whether that directory is synced is
+the tool's decision. The ledger has to be synced, or the same typed sequence
 resolves differently on different machines. A directory of the library's own
 lets the ledger sync without deciding anything for the tool. Every adopting
 tool's ledger lands in it, so adopting the library costs no new synced folder.

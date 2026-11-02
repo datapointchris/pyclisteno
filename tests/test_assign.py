@@ -77,9 +77,7 @@ def test_a_removed_commands_prefix_is_retired_rather_than_dropped():
 
 
 def test_a_removed_commands_prefix_is_never_handed_to_another_command():
-    """A recycled sequence still runs, and runs something else.
-
-    `runs` leaves in the same run that `runsagain` arrives, so its prefix is
+    """`runs` leaves in the same run that `runsagain` arrives, so its prefix is
     still a ledger assignment rather than a retired one when `runsagain` asks.
     """
     _, ledger = assign_app(app_with('run', 'runs'))

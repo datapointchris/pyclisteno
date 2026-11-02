@@ -23,11 +23,7 @@ def make_callback(name, pin=None, excluded=False):
 
 
 def app_with_markup():
-    """Help text carrying rich tags, which is legitimate for a Python CLI.
-
-    A tool whose help renders through rich writes rich tags in its help strings,
-    so its own summaries reach the dump with tags in them.
-    """
+    """Help text carrying rich tags, which is legitimate for a Python CLI."""
     app = typer.Typer(help='A [bold]marked up[/bold] app.')
     app.callback()(lambda: None)
 
