@@ -1,5 +1,6 @@
 .coverage
 coverage.xml
+htmlcov/
 dist/
 *.egg-info/
 __pycache__/
