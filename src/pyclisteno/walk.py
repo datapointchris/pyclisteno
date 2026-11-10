@@ -25,6 +25,7 @@ makes the non-invasiveness property testable rather than hoped for.
 from __future__ import annotations
 
 from collections.abc import Callable
+from collections.abc import Iterator
 from typing import Protocol
 from typing import runtime_checkable
 
@@ -116,32 +117,39 @@ def format_argument(argument: ParameterLike) -> str:
     return f'[{label}]'
 
 
-def build_node(command: CommandLike, name: str, path: list[str], tool: str) -> Node:
-    """A context per node, because a group may generate its children on demand.
+def child_commands(command: CommandLike, name: str) -> Iterator[tuple[str, CommandLike]]:
+    """Each visible child of a group, sorted by name; nothing for a plain command.
 
+    The one enumeration both the model and `commands_by_path` read, so the two
+    cannot disagree about which commands exist.
+
+    A context per group, because a group may generate its children on demand.
     `list_commands` and `get_command` both take one, and a tree built from config
     is exactly the case that cannot answer without it. The context is built from
     the command's own `context_class` and given no parent: the parent chain only
     feeds usage strings, which nothing here reads, and a mixed tree would
     otherwise hand one implementation's context to the other's group.
     """
+    if not is_group(command):
+        return
     context = command.context_class(command, info_name=name)
+    # Sorted, because the model is a spec artifact and assignment reads siblings
+    # in order to decide who keeps a contested prefix. Click sorts its commands
+    # and typer preserves declaration order, so an unsorted walk would hand the
+    # same tree different shortcuts depending on which library built it.
+    for child_name in sorted(command.list_commands(context)):  # type: ignore[attr-defined]
+        child = command.get_command(context, child_name)  # type: ignore[attr-defined]
+        # A hidden command is not part of the grammar anyone learns, and letting
+        # one consume a prefix would push a visible sibling onto a longer one for
+        # the sake of a command that never appears in help.
+        if child is None or child.hidden:
+            continue
+        yield child_name, child
+
+
+def build_node(command: CommandLike, name: str, path: list[str], tool: str) -> Node:
     arguments = arguments_of(command)
-    children = []
-    if is_group(command):
-        # Sorted, because the model is a spec artifact and assignment reads
-        # siblings in order to decide who keeps a contested prefix. Click sorts
-        # its commands and typer preserves declaration order, so an unsorted walk
-        # would hand the same tree different shortcuts depending on which library
-        # built it.
-        for child_name in sorted(command.list_commands(context)):  # type: ignore[attr-defined]
-            child = command.get_command(context, child_name)  # type: ignore[attr-defined]
-            # A hidden command is not part of the grammar anyone learns, and
-            # letting one consume a prefix would push a visible sibling onto a
-            # longer one for the sake of a command that never appears in help.
-            if child is None or child.hidden:
-                continue
-            children.append(build_node(child, child_name, [*path, child_name], tool))
+    children = [build_node(child, child_name, [*path, child_name], tool) for child_name, child in child_commands(command, name)]
     return Node(
         path=path,
         name=name,
@@ -173,13 +181,8 @@ def commands_by_path(app: object) -> dict[str, CommandLike]:
 
     def descend(command: CommandLike, name: str, path: list[str]) -> None:
         found[' '.join(path)] = command
-        if not is_group(command):
-            return
-        context = command.context_class(command, info_name=name)
-        for child_name in sorted(command.list_commands(context)):  # type: ignore[attr-defined]
-            child = command.get_command(context, child_name)  # type: ignore[attr-defined]
-            if child is not None:
-                descend(child, child_name, [*path, child_name])
+        for child_name, child in child_commands(command, name):
+            descend(child, child_name, [*path, child_name])
 
     root = as_command(app)
     descend(root, root.name or '', [])

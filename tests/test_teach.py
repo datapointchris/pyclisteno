@@ -59,9 +59,7 @@ def test_a_click_tree_is_written_to_directly(stores):
 def test_every_command_is_found_at_the_key_the_model_uses():
     app = build_fixture_app()
     model = walk(app, 'hostile')
-    commands = commands_by_path(app)
-    for node in model.nodes():
-        assert ' '.join(node.path) in commands
+    assert set(commands_by_path(app)) == {' '.join(node.path) for node in model.nodes()}
 
 
 def test_teaching_off_leaves_the_help_alone(stores):
