@@ -141,6 +141,10 @@ never truncated. Click and typer truncate their own, and nothing downstream reco
 - **The index carries no markup and no metavars**, because both columns go onto a command line. A
   bracket is a rich tag only when rich's `Style.parse` accepts it, so `[RUN_ID]` and `[OPTIONS]`
   survive. The JSON model keeps the markup.
+- **Every file the library writes goes through `write_atomically` in `model.py`, at a path from
+  `paths.py`.** A new write calls both rather than opening a file itself. The function is what
+  makes a write atomic and skips an unchanged one, and `paths.py` is the only place the XDG
+  fallbacks and the state, cache and config split are decided.
 - **`write_atomically` skips a write whose content is unchanged.** That is the whole staleness
   check. The ledger is meant to be synced between machines, and a rewrite that changes only the
   mtime would wake the sync on every invocation. `test_a_second_attach_leaves_every_file_untouched`
