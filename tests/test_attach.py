@@ -88,6 +88,20 @@ def test_a_named_app_keeps_its_own_name(stores):
     assert infer_tool(as_command(app)) == 'dectl'
 
 
+@pytest.mark.parametrize(
+    ('typed', 'expected'),
+    [
+        (['/bin/hostile', 'ru'], ['/bin/hostile', 'run']),
+        (['/bin/pytest', 'ru'], ['/bin/pytest', 'ru']),
+    ],
+    ids=['the-tool-is-expanded', 'another-program-keeps-its-arguments'],
+)
+def test_expanding_rewrites_the_process_arguments_only_for_the_tool(stores, monkeypatch, typed, expected):
+    monkeypatch.setattr(sys, 'argv', list(typed))
+    attach(build_fixture_app(), tool='hostile', expanding=True)
+    assert sys.argv == expected
+
+
 def test_a_failure_costs_enrollment_and_nothing_else(stores):
     """A tool that dies because a cache directory is read-only is a tool this library broke."""
     assert attach(object(), tool='demo') is None
