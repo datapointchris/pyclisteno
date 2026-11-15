@@ -32,12 +32,10 @@ may take a prefix short enough that the retired string falls through to it —
 retire `ru`, assign `r` to a new `run`, and a sequence still in someone's fingers
 quietly runs something else.
 
-Those two conditions cover every prefix assigned from here on, but they cannot
-reach backwards. A prefix handed out before the retirement can still capture the
-retired string, and the answer is not to take it off the incumbent — that breaks
-a sequence in use today to protect one nobody can use at all. Resolution carries
-the other half by letting a retired string win its own longest match and stop
-there. See the module docstring in resolve.py.
+Those two conditions reach only prefixes assigned from here on. A prefix issued
+before the retirement can still capture the retired string, and the module
+docstring of resolve.py says how resolution stops there and why the incumbent
+keeps its prefix.
 
 **Precedence**: a pin in the user's config, then `@shortcut` in the source, then
 the ledger's grandfather, then the computed minimum. A lock that is not valid
