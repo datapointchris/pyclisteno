@@ -29,25 +29,18 @@ against the ledger and the pins, `save_ledger` and `export` write the three file
 `dependencies` in `pyproject.toml` is empty. The Python floor is 3.11 because `tomllib` reads the
 pin file without a TOML package.
 
-- **The walk matches on shape, never on click's classes.** Typer 0.27 vendors a complete copy of
-  click at `typer._click`, sharing no base class with the installed click. An `isinstance` check
-  against `click.Command` sees a typer tree as no tree, and returns an empty model without an error.
-  `CommandLike` in `walk.py` is the shape both implementations expose.
+- **The walk matches on shape, never on click's classes.** `CommandLike` in `walk.py` is the shape
+  click and typer both expose. The module docstring says why an `isinstance` check fails silently.
 - **typer and rich are imported inside `try`/`except ImportError`**, in `walk.py`, `teach.py` and
   `markup.py`. An unguarded import makes either one a dependency of every consumer.
 - **`fixture.py` imports typer at module level.** Nothing `__init__.py` imports may import it.
 
 ## Typer rebuilds its tree, so teaching writes to typer's records
 
-Teaching sets `short_help` on each command, the string a parent's help row reads. No formatter,
-template or rich style is touched. A click app's commands are the objects that run, so the write
-lands on them. A typer app's `get_command` builds a fresh tree on every call, so a write to a
-converted command is discarded when typer converts again to run. `teach` therefore writes to typer's
-`CommandInfo` and `TyperInfo`. `enroll` passes it the original app, never the converted command.
-
-Names come from typer's own `get_command_name`. `test_every_assigned_node_has_somewhere_to_write`
-fails when they stop matching the walked tree. Without it, the failure is hints that silently stop
-appearing.
+Teaching sets `short_help` and touches no renderer. For a typer app it writes to typer's
+`CommandInfo` and `TyperInfo`, so `enroll` passes it the original app, never the converted command.
+The `teach.py` module docstring says why a write to a converted command is lost, and which test
+fails when the names stop matching.
 
 `@shortcut` and `@no_shortcut` set an attribute on the callback, never an entry in a registry keyed
 by name, because a tree built at runtime makes several commands from one callback. Typer wraps the
@@ -60,9 +53,8 @@ Everything in `assign.py` and `resolve.py` protects this. A recycled sequence st
 something else.
 
 - **The ledger is state, not cache.** It lives at `$XDG_STATE_HOME/clisteno/<tool>.json`. Deleting
-  it changes what typed sequences mean. A key is the node path joined with spaces. A value is that
-  node's prefix at its own level, never the run-together sequence, which would break every
-  descendant when an ancestor's prefix changed.
+  it changes what typed sequences mean. The `ledger.py` module docstring says how a node is keyed
+  and why a value is one level's prefix.
 - **Precedence is config pin, then `@shortcut`, then the ledger, then the computed minimum.** A lock
   that is not valid where it lands falls through to the next source. Locks are taken across a whole
   sibling set before any free node, so an incumbent never loses its prefix to a newcomer that sorts
@@ -110,20 +102,10 @@ by the whole sequence, because a prefix is unique only among its siblings.
 ## Expansion declines wherever it is not certain
 
 `expanding` rewrites `sys.argv` before the CLI parses it. It is the one surface that can make a CLI
-run something other than what was typed. An unknown token, a retired sequence and a leading option
-all pass through untouched, for the CLI to answer itself. Expanding to the node reached before a
-retired string would run an ancestor of a removed command.
-
-A token equal to a command's full name reaches that command before any prefix is tried, in
-`named_child`. An incumbent keeps its prefix when a sibling arrives, so a `run` added after `runs`
-took `ru` gets no prefix, and prefix matching alone would expand `run` to `runs`.
-
-Otherwise a token matches a command only between its prefix and its full name. Starting with the
-prefix is not enough: `"update --help"` passed as one argument starts with `update`'s prefix, and
-running `update` for it turns a malformed argument into a write.
-
-argv is rewritten only when the basename of `argv[0]` is the tool. Enrollment runs at import, so
-pytest collecting a module that calls `attach` would otherwise have its own arguments rewritten.
+run something other than what was typed, so it leaves argv untouched wherever it is not certain. A
+change to it keeps every decline. The `expand_argv` docstring in `resolve.py` lists them, and its
+body says why argv is rewritten only when `argv[0]` is the tool. `named_child` and `match_child`
+say how a token reaches a command.
 
 ## The walk is ordered, so who built the tree cannot change the shortcuts
 
@@ -149,11 +131,8 @@ never truncated. Click and typer truncate their own, and nothing downstream reco
   check. The ledger is meant to be synced between machines, and a rewrite that changes only the
   mtime would wake the sync on every invocation. `test_a_second_attach_leaves_every_file_untouched`
   holds it.
-- **State and cache are namespaced by library, the pin file by tool.** The pin file sits beside the
-  tool's own config, where a user looks. `$XDG_STATE_HOME/<tool>/` belongs to the tool, and other
-  libraries write there too, so whether it is synced is the tool's decision. The ledger has to be
-  synced, so it lives under `clisteno/` instead, where one synced folder covers every adopting
-  tool. `test_paths.py` pins that asymmetry.
+- **State and cache are namespaced by library, the pin file by tool.** The `paths.py` module
+  docstring says why. `test_paths.py` pins that asymmetry.
 - **The names and fields are written for implementations in other languages to share.** They are
   the node fields and index columns, which `SCHEMA` versions, plus the ledger keying, the
   `clisteno` directory and the pin filename. The pin filename carries no language prefix for that
