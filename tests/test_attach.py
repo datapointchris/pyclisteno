@@ -34,6 +34,7 @@ def test_attaching_publishes_the_model_the_index_and_the_ledger(stores):
 
 def test_attaching_returns_the_assigned_model(stores):
     model = attach(build_fixture_app(), tool='hostile')
+    assert model is not None
     assert {node.name: node.prefix for node in model.root.children if node.prefix} == {
         'glue': 'g',
         'review': 're',

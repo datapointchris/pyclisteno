@@ -45,6 +45,7 @@ def test_every_assigned_node_has_somewhere_to_write(stores):
     """
     app = build_fixture_app()
     model = attach(app, tool='hostile')
+    assert model is not None
     targets = targets_for(app)
     assert [node.path for node in model.nodes() if node.prefix and key_of(node.path) not in targets] == []
 

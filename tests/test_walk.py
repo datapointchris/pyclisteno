@@ -1,6 +1,7 @@
 import click
 import pytest
 import typer
+from typer.core import TyperGroup
 from typer.testing import CliRunner
 
 from pyclisteno.fixture import build_fixture_app
@@ -77,7 +78,9 @@ def test_a_pin_survives_typers_rebuild_of_the_callback():
     pinned here rather than left implicit.
     """
     command = as_command(build_fixture_app())
+    assert isinstance(command, TyperGroup)
     run = command.get_command(command.context_class(command, info_name='hostile'), 'run')
+    assert run is not None
     assert getattr(run.callback, SHORTCUT_ATTRIBUTE) == 'ru'
 
 
