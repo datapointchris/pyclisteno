@@ -111,8 +111,9 @@ say how a token reaches a command.
 
 Click sorts its commands and typer keeps declaration order. Assignment reads siblings in order to
 settle a contested prefix, so `build_node` sorts them. A hidden command is skipped, so it cannot
-push a visible sibling onto a longer prefix. A summary is the first help paragraph, collapsed and
-never truncated. Click and typer truncate their own, and nothing downstream recovers what was cut.
+push a visible sibling onto a longer prefix. A summary is the command's `short_help` where it sets
+one, otherwise its first help paragraph, collapsed and never truncated. Click and typer truncate
+their own, and nothing downstream recovers what was cut.
 
 ## The written files are a format, not an internal detail
 

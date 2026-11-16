@@ -93,7 +93,7 @@ def arguments_of(command: CommandLike) -> list[ParameterLike]:
 
 
 def summarize(command: CommandLike) -> str:
-    """First paragraph, whitespace collapsed, never truncated.
+    """`short_help` if set, else the first help paragraph; whitespace collapsed, never truncated.
 
     Click's `get_short_help_str` truncates to 45 characters and typer's zsh
     completion to 50, which is where the trailing ellipsis in every completion
