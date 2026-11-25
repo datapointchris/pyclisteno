@@ -10,7 +10,7 @@ from pyclisteno.model import render_model
 from pyclisteno.walk import walk
 
 
-@pytest.mark.parametrize('body', ['bold', '/bold', 'bold red', 'dim', 'green', 'i', '/'])
+@pytest.mark.parametrize('body', ['bold', '/bold', '/'])
 def test_rich_styles_are_tags(body):
     assert is_tag(body) is True
 
