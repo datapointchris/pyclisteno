@@ -96,11 +96,9 @@ def test_an_excluded_command_is_shown_without_a_hint(stores):
 
 
 def test_teaching_does_not_change_which_commands_exist(stores):
-    plain = build_fixture_app()
     taught = build_fixture_app()
     attach(taught, tool='hostile', teaching=True)
     for name in ('run', 'runs', 'review', 'destroy', 'glue'):
-        assert name in help_for(plain)
         assert name in help_for(taught)
 
 

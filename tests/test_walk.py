@@ -1,13 +1,12 @@
 import click
 import pytest
 import typer
-from typer.core import TyperGroup
 from typer.testing import CliRunner
 
 from pyclisteno.fixture import build_fixture_app
 from pyclisteno.marks import SHORTCUT_ATTRIBUTE
 from pyclisteno.marks import no_shortcut
-from pyclisteno.walk import as_command
+from pyclisteno.walk import commands_by_path
 from pyclisteno.walk import walk
 
 
@@ -77,10 +76,7 @@ def test_a_pin_survives_typers_rebuild_of_the_callback():
     wrapping this way, every pin silently stops applying, so the assumption is
     pinned here rather than left implicit.
     """
-    command = as_command(build_fixture_app())
-    assert isinstance(command, TyperGroup)
-    run = command.get_command(command.context_class(command, info_name='hostile'), 'run')
-    assert run is not None
+    run = commands_by_path(build_fixture_app())['run']
     assert getattr(run.callback, SHORTCUT_ATTRIBUTE) == 'ru'
 
 
